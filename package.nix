@@ -22,6 +22,12 @@
       npmlock2nix.v2.node_modules { src = ./.; } + /node_modules;
     foreign."XTerm.Api.Terminal.Addon.WebGL".node_modules =
       npmlock2nix.v2.node_modules { src = ./.; } + /node_modules;
+    foreign."XTerm.Api.Terminal.Addon.Fit".node_modules =
+      npmlock2nix.v2.node_modules { src = ./.; } + /node_modules;
+    foreign."XTerm.Api.Terminal.Addon.WebLinks".node_modules =
+      npmlock2nix.v2.node_modules { src = ./.; } + /node_modules;
+
+
 
     test-dependencies =
       [ test-unit

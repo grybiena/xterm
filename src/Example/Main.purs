@@ -8,8 +8,8 @@ import Effect.Console (log)
 import Web.DOM (Document)
 import Web.DOM.Document (toNonElementParentNode)
 import Web.DOM.NonElementParentNode (getElementById)
-import XTerm.Api.Terminal (loadAddon, new, open, write, writeln)
-import XTerm.Api.Terminal.Addon (webGLAddon)
+import XTerm.Api.Terminal (loadAddon, new, openTerminal, writeln)
+import XTerm.Api.Terminal.Addon (fit, fitAddon, webGLAddon, webLinksAddon)
 
 foreign import onLoad :: (Document -> Effect Unit) -> Effect Unit
 
@@ -20,10 +20,18 @@ main = onLoad $ \doc -> do
     Nothing -> log "no terminal div"
     Just e -> do
       term <- new mempty mempty
-      open term e
+      openTerminal term e
       writeln term "Hello there" (pure unit)
       gl <- webGLAddon
       loadAddon term gl
-      write term "WebGL!!!" (pure unit)
+      writeln term "WebGL!!!" (pure unit)
+      li <- webLinksAddon
+      loadAddon term li
+      writeln term "links https://duckduckgo.com" (pure unit)
+      fi <- fitAddon
+      loadAddon term fi
+      fit fi
+      writeln term "fit" (pure unit)
+
 
 

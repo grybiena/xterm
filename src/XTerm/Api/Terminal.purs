@@ -70,7 +70,7 @@ foreign import onTitleChange :: Terminal -> (String -> Effect Unit) -> Effect Di
 foreign import blur :: Terminal -> Effect Unit
 foreign import focus :: Terminal -> Effect Unit
 foreign import resize :: Terminal -> { cols :: Int, rows :: Int} -> Effect Unit
-foreign import open :: Terminal -> Element -> Effect Unit
+foreign import openTerminal :: Terminal -> Element -> Effect Unit
 foreign import attachCustomKeyEventHandler :: Terminal -> (KeyboardEvent -> Boolean) -> Effect Unit
 foreign import registerILinkProvider :: Terminal -> ILinkProvider -> Effect Disposable
 

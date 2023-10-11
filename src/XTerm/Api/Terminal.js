@@ -22,7 +22,7 @@ export const onTitleChange = term => listener => () => term.onTitleChange(s => l
 export const blur = term => () => term.blur();
 export const focus = term => () => term.focus();
 export const resize = term => size => () => term.resize(size.cols,size.rows);
-export const open = term => el => () => term.open(el);
+export const openTerminal = term => el => () => term.open(el);
 export const attachCustomKeyEventHandler = term => handler => () => term.attachCustomKeyEventHandler(handler);
 export const registerILinkProvider = term => provider => () => term.registerLinkProvider({
   provideLinks: (bufferLineNumber, callback) => {
