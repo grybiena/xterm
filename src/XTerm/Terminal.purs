@@ -1,6 +1,6 @@
 module XTerm.Terminal where
 
-import Control.Alt (map)
+import Control.Alt (map, (<$>))
 import Control.Category ((<<<))
 import Data.Maybe (Maybe)
 import Data.Options (Options, options)
@@ -9,13 +9,15 @@ import Effect (Effect)
 import Foreign (Foreign)
 import Web.DOM (Element)
 import Web.UIEvent.KeyboardEvent (KeyboardEvent)
+import XTerm.Addons (class Addon, TerminalAddon, addon)
 import XTerm.Buffer (BufferRange)
 import XTerm.Buffer.Namespace (BufferNamespace)
+import XTerm.Decoration (Decoration)
+import XTerm.Decoration.Options (DecorationOptions, IDecorationOptions, makeDecorationOptions)
 import XTerm.Disposable (Disposable)
 import XTerm.LinkProvider (ILinkProvider, LinkProvider, makeLinkProvider)
 import XTerm.Marker (Marker)
 import XTerm.Options (TerminalInitOnlyOptions, TerminalOptions)
-import XTerm.Addons (class Addon, TerminalAddon, addon)
 import XTerm.Utils (maybeUndefined)
 
 data Terminal
@@ -81,7 +83,11 @@ registerLinkProvider t p = registerILinkProvider t (makeLinkProvider p)
 --foreign import deregisterCharacterJoiner :: Terminal -> JoinerId -> Effect Unit
 newtype CursorYOffset = CursorYOffset Int
 foreign import registerMarker :: Terminal -> CursorYOffset -> Effect Marker
---foreign import registerDecoration :: Terminal -> IDecorationOptions -> Effect (IDecoration \/ undefined)
+foreign import _registerDecoration :: Terminal -> IDecorationOptions -> Effect Foreign -- (IDecoration \/ undefined)
+
+registerDecoration :: Terminal -> DecorationOptions -> Effect (Maybe Decoration)
+registerDecoration t o = maybeUndefined <$> _registerDecoration t (makeDecorationOptions o)
+
 foreign import hasSelection :: Terminal -> Effect Boolean
 foreign import getSelection :: Terminal -> Effect String
 foreign import _getSelectionPosition :: Terminal -> Effect Foreign

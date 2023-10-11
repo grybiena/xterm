@@ -31,6 +31,7 @@ export const registerILinkProvider = term => provider => () => term.registerLink
   }
 }); 
 export const registerMarker = term => offset => () => term.registerMarker(offset);
+export const _registerDecoration = term => opts => () => term.registerDecoration(opts);
 export const hasSelection = term => () => term.hasSelection();
 export const getSelection = term => () => term.getSelection();
 export const _getSelectionPosition = term => () => term.getSelectionPosition();
