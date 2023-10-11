@@ -1,4 +1,4 @@
-module XTerm.Api.Options.Logger where
+module XTerm.Options.Logger where
 
 import Data.Unit (Unit)
 import Effect (Effect)

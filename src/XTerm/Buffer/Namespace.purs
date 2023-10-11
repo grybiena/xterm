@@ -1,9 +1,9 @@
-module XTerm.Api.Buffer.Namespace where
+module XTerm.Buffer.Namespace where
 
 import Data.Unit (Unit)
 import Effect (Effect)
-import XTerm.Api.Buffer (Buffer)
-import XTerm.Api.Disposable (Disposable)
+import XTerm.Buffer (Buffer)
+import XTerm.Disposable (Disposable)
 
 data BufferNamespace
 

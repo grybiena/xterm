@@ -1,4 +1,4 @@
-module XTerm.Api.Options.Theme where
+module XTerm.Options.Theme where
 
 import Color
 

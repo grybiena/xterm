@@ -1,4 +1,4 @@
-module XTerm.Api.Buffer.Cell where
+module XTerm.Buffer.Cell where
 
 import Effect (Effect)
 

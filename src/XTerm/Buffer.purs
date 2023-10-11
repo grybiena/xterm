@@ -1,4 +1,4 @@
-module XTerm.Api.Buffer
+module XTerm.Buffer
   ( Buffer
   , CellPosition(..)
   , BufferRange(..)
@@ -16,9 +16,9 @@ import Prelude
 import Data.Maybe (Maybe)
 import Effect (Effect)
 import Foreign (Foreign)
-import XTerm.Api.Buffer.Cell (BufferCell)
-import XTerm.Api.Buffer.Line (BufferLine)
-import XTerm.Api.Utils (maybeUndefined)
+import XTerm.Buffer.Cell (BufferCell)
+import XTerm.Buffer.Line (BufferLine)
+import XTerm.Utils (maybeUndefined)
 
 type CellPosition =
   { x :: Int

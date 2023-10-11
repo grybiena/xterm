@@ -1,4 +1,4 @@
-module XTerm.Api.Marker where
+module XTerm.Marker where
 
 import Effect (Effect)
 

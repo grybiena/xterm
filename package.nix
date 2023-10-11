@@ -18,13 +18,13 @@
 
       ];
     src = "src";
-    foreign."XTerm.Api.Terminal".node_modules =
+    foreign."Xterm.Terminal".node_modules =
       npmlock2nix.v2.node_modules { src = ./.; } + /node_modules;
-    foreign."XTerm.Api.Addons.WebGL".node_modules =
+    foreign."Xterm.Addons.WebGL".node_modules =
       npmlock2nix.v2.node_modules { src = ./.; } + /node_modules;
-    foreign."XTerm.Api.Addons.Fit".node_modules =
+    foreign."Xterm.Addons.Fit".node_modules =
       npmlock2nix.v2.node_modules { src = ./.; } + /node_modules;
-    foreign."XTerm.Api.Addons.WebLinks".node_modules =
+    foreign."Xterm.Addons.WebLinks".node_modules =
       npmlock2nix.v2.node_modules { src = ./.; } + /node_modules;
 
 

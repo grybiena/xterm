@@ -1,4 +1,4 @@
-module XTerm.Api.Options.WindowsPty where
+module XTerm.Options.WindowsPty where
 
 import Control.Category ((<<<))
 import Data.Generic.Rep (class Generic)

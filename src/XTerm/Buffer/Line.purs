@@ -1,4 +1,4 @@
-module XTerm.Api.Buffer.Line
+module XTerm.Buffer.Line
   ( BufferLine
   , isWrapped
   , length
@@ -9,8 +9,8 @@ import Control.Alt ((<$>))
 import Data.Maybe (Maybe(..))
 import Effect (Effect)
 import Foreign (Foreign)
-import XTerm.Api.Buffer.Cell (BufferCell)
-import XTerm.Api.Utils (maybeUndefined)
+import XTerm.Buffer.Cell (BufferCell)
+import XTerm.Utils (maybeUndefined)
 
 data BufferLine
 

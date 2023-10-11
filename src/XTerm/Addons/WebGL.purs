@@ -1,10 +1,10 @@
-module XTerm.Api.Addons.WebGL where
+module XTerm.Addons.WebGL where
 
 import Data.Unit (Unit)
 import Effect (Effect)
 import Unsafe.Coerce (unsafeCoerce)
 import Web.Event.Event (Event)
-import XTerm.Api.Disposable (class IsDisposable)
+import XTerm.Disposable (class IsDisposable)
 
 data WebGLAddon
 

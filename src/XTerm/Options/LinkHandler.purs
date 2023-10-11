@@ -1,11 +1,11 @@
-module XTerm.Api.Options.LinkHandler where
+module XTerm.Options.LinkHandler where
 
 import Data.Options (Option, Options, opt)
 import Data.Unit (Unit)
 import Effect (Effect)
 import Foreign (Foreign)
 import Web.UIEvent.MouseEvent (MouseEvent)
-import XTerm.Api.Buffer (BufferRange)
+import XTerm.Buffer (BufferRange)
 
 
 type LinkHandler = 

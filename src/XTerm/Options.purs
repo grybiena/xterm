@@ -1,4 +1,4 @@
-module XTerm.Api.Options where
+module XTerm.Options where
 
 
 import CSS (FontWeight(..), Prefixed(..), Value(..))
@@ -11,11 +11,11 @@ import Data.Show.Generic (genericShow)
 import Data.String (toLower)
 import Data.Tuple (Tuple(..))
 import Foreign (unsafeToForeign)
-import XTerm.Api.Options.LinkHandler (LinkHandler, makeLinkHandler)
-import XTerm.Api.Options.Logger (ILogger, iLogger)
-import XTerm.Api.Options.Theme (Theme)
-import XTerm.Api.Options.WindowOptions (WindowOptions)
-import XTerm.Api.Options.WindowsPty (WindowsPty)
+import XTerm.Options.LinkHandler (LinkHandler, makeLinkHandler)
+import XTerm.Options.Logger (ILogger, iLogger)
+import XTerm.Options.Theme (Theme)
+import XTerm.Options.WindowOptions (WindowOptions)
+import XTerm.Options.WindowsPty (WindowsPty)
 
 data TerminalInitOnlyOptions
 

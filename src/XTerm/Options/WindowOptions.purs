@@ -1,4 +1,4 @@
-module XTerm.Api.Options.WindowOptions where
+module XTerm.Options.WindowOptions where
 
 import Data.Options (Option, opt)
 

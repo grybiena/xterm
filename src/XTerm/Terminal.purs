@@ -1,4 +1,4 @@
-module XTerm.Api.Terminal where
+module XTerm.Terminal where
 
 import Control.Alt (map)
 import Control.Category ((<<<))
@@ -9,14 +9,14 @@ import Effect (Effect)
 import Foreign (Foreign)
 import Web.DOM (Element)
 import Web.UIEvent.KeyboardEvent (KeyboardEvent)
-import XTerm.Api.Buffer (BufferRange)
-import XTerm.Api.Buffer.Namespace (BufferNamespace)
-import XTerm.Api.Disposable (Disposable)
-import XTerm.Api.LinkProvider (ILinkProvider, LinkProvider, makeLinkProvider)
-import XTerm.Api.Marker (Marker)
-import XTerm.Api.Options (TerminalInitOnlyOptions, TerminalOptions)
-import XTerm.Api.Addons (class Addon, TerminalAddon, addon)
-import XTerm.Api.Utils (maybeUndefined)
+import XTerm.Buffer (BufferRange)
+import XTerm.Buffer.Namespace (BufferNamespace)
+import XTerm.Disposable (Disposable)
+import XTerm.LinkProvider (ILinkProvider, LinkProvider, makeLinkProvider)
+import XTerm.Marker (Marker)
+import XTerm.Options (TerminalInitOnlyOptions, TerminalOptions)
+import XTerm.Addons (class Addon, TerminalAddon, addon)
+import XTerm.Utils (maybeUndefined)
 
 data Terminal
 

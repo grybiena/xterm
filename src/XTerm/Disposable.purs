@@ -1,4 +1,4 @@
-module XTerm.Api.Disposable where
+module XTerm.Disposable where
 
 import Control.Category (identity, (<<<))
 import Data.Unit (Unit)

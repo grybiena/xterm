@@ -1,4 +1,4 @@
-module XTerm.Api.Link
+module XTerm.Link
   ( LinkAction
   , LinkOptions
   , LinkOption
@@ -17,7 +17,7 @@ import Data.Unit (Unit)
 import Effect (Effect)
 import Foreign (Foreign)
 import Web.UIEvent.MouseEvent (MouseEvent)
-import XTerm.Api.Buffer (BufferRange)
+import XTerm.Buffer (BufferRange)
 
 type LinkAction = MouseEvent -> String -> Effect Unit
 

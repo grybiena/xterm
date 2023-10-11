@@ -1,16 +1,16 @@
-module XTerm.Api.Addons
+module XTerm.Addons
   ( TerminalAddon
   , class Addon
   , addon
-  , module XTerm.Api.Addons.Fit
-  , module XTerm.Api.Addons.WebGL
-  , module XTerm.Api.Addons.WebLinks
+  , module XTerm.Addons.Fit
+  , module XTerm.Addons.WebGL
+  , module XTerm.Addons.WebLinks
   ) where
 
 import Unsafe.Coerce (unsafeCoerce)
-import XTerm.Api.Addons.Fit (FitAddon, fit, fitAddon)
-import XTerm.Api.Addons.WebGL (WebGLAddon, onContextLoss, webGLAddon)
-import XTerm.Api.Addons.WebLinks (WebLinksAddon, webLinksAddon)
+import XTerm.Addons.Fit (FitAddon, fit, fitAddon)
+import XTerm.Addons.WebGL (WebGLAddon, onContextLoss, webGLAddon)
+import XTerm.Addons.WebLinks (WebLinksAddon, webLinksAddon)
 
 data TerminalAddon
 

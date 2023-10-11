@@ -1,9 +1,9 @@
-module XTerm.Api.Addons.Fit where
+module XTerm.Addons.Fit where
 
 import Data.Unit (Unit)
 import Effect (Effect)
 import Unsafe.Coerce (unsafeCoerce)
-import XTerm.Api.Disposable (class IsDisposable)
+import XTerm.Disposable (class IsDisposable)
 
 data FitAddon
 

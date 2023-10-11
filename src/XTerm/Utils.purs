@@ -1,4 +1,4 @@
-module XTerm.Api.Utils where
+module XTerm.Utils where
 
 import Data.Function (($))
 import Data.Maybe (Maybe(..))

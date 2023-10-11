@@ -1,9 +1,9 @@
-module XTerm.Api.LinkProvider where
+module XTerm.LinkProvider where
 
 import Control.Alt (class Functor, (<$>))
 import Data.Unit (Unit)
 import Effect (Effect)
-import XTerm.Api.Link (ILink, Link, makeLink)
+import XTerm.Link (ILink, Link, makeLink)
 
 
 newtype BufferLineNumber = BufferLineNumber Int
