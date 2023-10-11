@@ -15,7 +15,7 @@ import XTerm.Api.Disposable (Disposable)
 import XTerm.Api.LinkProvider (ILinkProvider, LinkProvider, makeLinkProvider)
 import XTerm.Api.Marker (Marker)
 import XTerm.Api.Options (TerminalInitOnlyOptions, TerminalOptions)
-import XTerm.Api.Terminal.Addon (TerminalAddon)
+import XTerm.Api.Terminal.Addon (class Addon, TerminalAddon, addon)
 import XTerm.Api.Utils (maybeUndefined)
 
 data Terminal
@@ -105,7 +105,10 @@ foreign import paste :: Terminal -> String -> Effect Unit
 foreign import refresh :: Terminal -> { start :: Int, end :: Int } -> Effect Unit
 foreign import clearTextureAtlas :: Terminal -> Effect Unit
 foreign import reset :: Terminal -> Effect Unit
-foreign import loadAddon :: Terminal -> TerminalAddon -> Effect Unit
+foreign import _loadAddon :: Terminal -> TerminalAddon -> Effect Unit
+
+loadAddon :: forall a . Addon a => Terminal -> a -> Effect Unit
+loadAddon t a = _loadAddon t (addon a)
 
 
 

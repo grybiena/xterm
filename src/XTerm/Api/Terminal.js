@@ -50,4 +50,4 @@ export const paste = term => str => () => term.paste(str);
 export const refresh = term => r => () => term.refresh(r.start,r.end);
 export const clearTextureAtlas = term => () => term.clearTextureAtlas();
 export const reset = term => () => term.reset();
-export const loadAddon = term => addon => () => term.loadAddon(addon);
+export const _loadAddon = term => addon => () => term.loadAddon(addon);

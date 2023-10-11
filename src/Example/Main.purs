@@ -9,7 +9,7 @@ import Web.DOM (Document)
 import Web.DOM.Document (toNonElementParentNode)
 import Web.DOM.NonElementParentNode (getElementById)
 import XTerm.Api.Terminal (loadAddon, new, open, write, writeln)
-import XTerm.Api.Terminal.Addon (webGlAddon)
+import XTerm.Api.Terminal.Addon (webGLAddon)
 
 foreign import onLoad :: (Document -> Effect Unit) -> Effect Unit
 
@@ -22,11 +22,8 @@ main = onLoad $ \doc -> do
       term <- new mempty mempty
       open term e
       writeln term "Hello there" (pure unit)
-      mwgl <- webGlAddon
-      case mwgl of
-        Nothing -> write term "No WebGL" (pure unit)
-        Just gl -> do
-           loadAddon term gl
-           write term "WebGL!!!" (pure unit)
+      gl <- webGLAddon
+      loadAddon term gl
+      write term "WebGL!!!" (pure unit)
 
 

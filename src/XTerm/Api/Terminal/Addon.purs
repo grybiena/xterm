@@ -1,14 +1,18 @@
-module XTerm.Api.Terminal.Addon where
+module XTerm.Api.Terminal.Addon
+  ( TerminalAddon
+  , class Addon
+  , addon
+  , module XTerm.Api.Terminal.Addon.WebGL
+  ) where
 
-import Control.Alt ((<$>))
-import Data.Maybe (Maybe)
-import Effect (Effect)
-import Foreign (Foreign)
-import XTerm.Api.Utils (maybeUndefined)
+import Unsafe.Coerce (unsafeCoerce)
+import XTerm.Api.Terminal.Addon.WebGL
 
 data TerminalAddon
 
-foreign import _webGlAddon :: Effect Foreign 
+class Addon a where
+  addon :: a -> TerminalAddon 
 
-webGlAddon :: Effect (Maybe TerminalAddon)
-webGlAddon = maybeUndefined <$> _webGlAddon
+instance Addon WebGLAddon where
+  addon = unsafeCoerce
+
