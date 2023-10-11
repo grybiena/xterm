@@ -1,4 +1,4 @@
-module XTerm.Api.Terminal.Addon.WebLinks where
+module XTerm.Api.Addons.WebLinks where
 
 import Effect (Effect)
 import Unsafe.Coerce (unsafeCoerce)

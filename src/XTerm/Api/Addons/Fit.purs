@@ -1,4 +1,4 @@
-module XTerm.Api.Terminal.Addon.Fit where
+module XTerm.Api.Addons.Fit where
 
 import Data.Unit (Unit)
 import Effect (Effect)

@@ -9,7 +9,7 @@ import Web.DOM (Document)
 import Web.DOM.Document (toNonElementParentNode)
 import Web.DOM.NonElementParentNode (getElementById)
 import XTerm.Api.Terminal (loadAddon, new, openTerminal, writeln)
-import XTerm.Api.Terminal.Addon (fit, fitAddon, webGLAddon, webLinksAddon)
+import XTerm.Api.Addons (fit, fitAddon, webGLAddon, webLinksAddon)
 
 foreign import onLoad :: (Document -> Effect Unit) -> Effect Unit
 

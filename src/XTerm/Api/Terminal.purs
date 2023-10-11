@@ -15,7 +15,7 @@ import XTerm.Api.Disposable (Disposable)
 import XTerm.Api.LinkProvider (ILinkProvider, LinkProvider, makeLinkProvider)
 import XTerm.Api.Marker (Marker)
 import XTerm.Api.Options (TerminalInitOnlyOptions, TerminalOptions)
-import XTerm.Api.Terminal.Addon (class Addon, TerminalAddon, addon)
+import XTerm.Api.Addons (class Addon, TerminalAddon, addon)
 import XTerm.Api.Utils (maybeUndefined)
 
 data Terminal

@@ -1,4 +1,4 @@
-module XTerm.Api.Terminal.Addon.WebGL where
+module XTerm.Api.Addons.WebGL where
 
 import Data.Unit (Unit)
 import Effect (Effect)

@@ -20,11 +20,11 @@
     src = "src";
     foreign."XTerm.Api.Terminal".node_modules =
       npmlock2nix.v2.node_modules { src = ./.; } + /node_modules;
-    foreign."XTerm.Api.Terminal.Addon.WebGL".node_modules =
+    foreign."XTerm.Api.Addons.WebGL".node_modules =
       npmlock2nix.v2.node_modules { src = ./.; } + /node_modules;
-    foreign."XTerm.Api.Terminal.Addon.Fit".node_modules =
+    foreign."XTerm.Api.Addons.Fit".node_modules =
       npmlock2nix.v2.node_modules { src = ./.; } + /node_modules;
-    foreign."XTerm.Api.Terminal.Addon.WebLinks".node_modules =
+    foreign."XTerm.Api.Addons.WebLinks".node_modules =
       npmlock2nix.v2.node_modules { src = ./.; } + /node_modules;
 
 
