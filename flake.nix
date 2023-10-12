@@ -33,6 +33,7 @@ rec {
                  info = package;
                };
            packages.output = ps.output {};
+           packages.css = pkgs.writeText "xterm.css" (builtins.readFile node_modules/xterm/css/xterm.css);
            devShells.default = 
              pkgs.mkShell
                { packages = with pkgs; [
