@@ -6,6 +6,7 @@ export const rows = term => () => term.rows;
 export const cols = term => () => term.cols;
 export const buffer = term => () => term.buffer;
 export const markers = term => () => term.markers;
+export const parser = term => () => term.parser;
 export const _setOptions = term => opts => () => terms.setOptions(opts);
 export const onBell = term => listener => () => term.onBell(listener);
 export const onBinary = term => listener => () => term.onBinary(s => listener(s)());

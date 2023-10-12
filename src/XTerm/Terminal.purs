@@ -18,6 +18,7 @@ import XTerm.Disposable (Disposable)
 import XTerm.LinkProvider (ILinkProvider, LinkProvider, makeLinkProvider)
 import XTerm.Marker (Marker)
 import XTerm.Options (TerminalInitOnlyOptions, TerminalOptions)
+import XTerm.Parser (Parser)
 import XTerm.Utils (maybeUndefined)
 
 data Terminal
@@ -44,7 +45,7 @@ foreign import rows :: Terminal -> Effect Int
 foreign import cols :: Terminal -> Effect Int
 foreign import buffer :: Terminal -> Effect BufferNamespace
 foreign import markers :: Terminal -> Effect (Array Marker)
---foreign import parser :: Terminal -> Effect IParser
+foreign import parser :: Terminal -> Effect Parser
 --foreign import unicode :: Terminal -> Effect IUnicodeHandling
 --foreign import modes :: Terminal -> Effect IModes
 
