@@ -4,6 +4,7 @@ import Control.Alt (map, (<$>))
 import Control.Category ((<<<))
 import Data.Maybe (Maybe)
 import Data.Options (Options, options)
+import Data.Tuple.Nested (type (/\), (/\))
 import Data.Unit (Unit)
 import Effect (Effect)
 import Foreign (Foreign)
@@ -17,9 +18,12 @@ import XTerm.Decoration.Options (DecorationOptions, IDecorationOptions, makeDeco
 import XTerm.Disposable (Disposable)
 import XTerm.LinkProvider (ILinkProvider, LinkProvider, makeLinkProvider)
 import XTerm.Marker (Marker)
+import XTerm.Modes (Modes)
 import XTerm.Options (TerminalInitOnlyOptions, TerminalOptions)
 import XTerm.Parser (Parser)
 import XTerm.Utils (maybeUndefined)
+import Xterm.LocalizableStrings (LocalizableStrings)
+import Xterm.UnicodeHandling (UnicodeHandling)
 
 data Terminal
 
@@ -46,15 +50,15 @@ foreign import cols :: Terminal -> Effect Int
 foreign import buffer :: Terminal -> Effect BufferNamespace
 foreign import markers :: Terminal -> Effect (Array Marker)
 foreign import parser :: Terminal -> Effect Parser
---foreign import unicode :: Terminal -> Effect IUnicodeHandling
---foreign import modes :: Terminal -> Effect IModes
+foreign import unicode :: Terminal -> Effect UnicodeHandling
+foreign import modes :: Terminal -> Effect Modes
 
 foreign import _setOptions :: Terminal -> Foreign -> Effect Unit
 
 setOptions :: Terminal -> Options TerminalOptions -> Effect Unit 
 setOptions t o = _setOptions t (options o)
 
---foreign import strings :: Terminal -> Effect ILocalizableStrings
+foreign import localizableStrings :: Terminal -> Effect LocalizableStrings
 foreign import onBell :: Terminal -> Effect Unit -> Effect Disposable
 newtype BinaryString = BinaryString String
 foreign import onBinary :: Terminal -> (BinaryString -> Effect Unit) -> Effect Disposable
@@ -80,8 +84,14 @@ foreign import registerILinkProvider :: Terminal -> ILinkProvider -> Effect Disp
 registerLinkProvider :: Terminal -> LinkProvider -> Effect Disposable
 registerLinkProvider t p = registerILinkProvider t (makeLinkProvider p)
 
---foreign import registerCharacterJoiner :: Terminal -> (String -> Array (Int /\ Int)) -> Effect JoinerId
---foreign import deregisterCharacterJoiner :: Terminal -> JoinerId -> Effect Unit
+foreign import _registerCharacterJoiner :: Terminal -> (String -> Array (Array Int)) -> Effect JoinerId
+
+registerCharacterJoiner :: Terminal -> (String -> Array (Int /\ Int)) -> Effect JoinerId
+registerCharacterJoiner t j = _registerCharacterJoiner t (k <<< j)
+  where k a = (\(x /\ y) -> [x,y]) <$> a
+
+newtype JoinerId = JoinerId Int
+foreign import deregisterCharacterJoiner :: Terminal -> JoinerId -> Effect Unit
 newtype CursorYOffset = CursorYOffset Int
 foreign import registerMarker :: Terminal -> CursorYOffset -> Effect Marker
 foreign import _registerDecoration :: Terminal -> IDecorationOptions -> Effect Foreign -- (IDecoration \/ undefined)

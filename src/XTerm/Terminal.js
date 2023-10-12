@@ -7,7 +7,10 @@ export const cols = term => () => term.cols;
 export const buffer = term => () => term.buffer;
 export const markers = term => () => term.markers;
 export const parser = term => () => term.parser;
+export const unicode = term => () => term.unicode;
+export const modes = term => () => term.modes;
 export const _setOptions = term => opts => () => terms.setOptions(opts);
+export const localizableStrings = term => () => term.strings;
 export const onBell = term => listener => () => term.onBell(listener);
 export const onBinary = term => listener => () => term.onBinary(s => listener(s)());
 export const onCursorMove = term => listener => () => term.onCursorMove(listener);
@@ -31,6 +34,8 @@ export const registerILinkProvider = term => provider => () => term.registerLink
     callback(undefined);
   }
 }); 
+export const _registerCharacterJoiner = term => h => () => term.registerCharacterJoiner(h);
+export const deregisterCharacterJoiner = term => i => () => term.deregisterCharacterJoiner(i);
 export const registerMarker = term => offset => () => term.registerMarker(offset);
 export const _registerDecoration = term => opts => () => term.registerDecoration(opts);
 export const hasSelection = term => () => term.hasSelection();
