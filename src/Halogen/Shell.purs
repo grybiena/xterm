@@ -1,4 +1,4 @@
-module Halogen.Terminal.Shell where
+module Halogen.Shell where
 
 import Prelude
 
@@ -23,8 +23,8 @@ type Slots = ( terminal :: H.Slot TerminalF T.Output Unit )
 _terminal = Proxy :: Proxy "terminal"
 
 type Shell m =
-  { prompt :: String
-  , interpreter :: String -> ShellM m Unit
+  { configure :: ShellM m Unit
+  , interpret :: String -> ShellM m Unit
   }
 
 type State m =
@@ -69,11 +69,11 @@ handleAction = case _ of
       li <- webLinksAddon
       loadAddon terminal li
     H.modify_ (\st -> st { terminal = Just terminal })
-    st <- H.get
-    H.tell _terminal unit (Write st.shell.prompt)
+    { shell } <- H.get
+    void $ runShellM $ shell.configure
   TerminalOutput (Data d) -> do
      { shell } <- H.get
-     void $ runShellM $ shell.interpreter d
+     void $ runShellM $ shell.interpret d
 
 runShellM :: forall o m a .
             MonadAff m
