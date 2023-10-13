@@ -8,6 +8,8 @@ import Data.Maybe (Maybe)
 import Data.Unit (Unit, unit)
 import Web.DOM (Element)
 import XTerm.Addons (class Addon, FitAddon, TerminalAddon, WebGLAddon, WebLinksAddon, addon)
+import XTerm.Buffer (Buffer)
+import XTerm.Buffer.Line (BufferLine)
 
 
 
@@ -16,7 +18,12 @@ data TerminalF a =
   | TextArea (Element -> a)
   | Rows (Int -> a)
   | Cols (Int -> a)
-  | ActiveBufferCursorX (Int -> a)
+  | ActiveBuffer (Buffer -> a)
+  | CursorX Buffer (Int -> a)
+  | CursorY Buffer (Int -> a)
+  | BufferLength Buffer (Int -> a)
+  | GetBufferLine Buffer Int (Maybe BufferLine -> a)
+  | BufferLineLength BufferLine (Int -> a)
   | Write String a
   | WriteLn String a
   | FitAddon (Maybe FitAddon -> a)
@@ -29,7 +36,12 @@ instance Functor TerminalF where
   map f (TextArea e) = TextArea (f <<< e)
   map f (Rows e) = Rows (f <<< e)
   map f (Cols e) = Cols (f <<< e)
-  map f (ActiveBufferCursorX e) = ActiveBufferCursorX (f <<< e)
+  map f (ActiveBuffer e) = ActiveBuffer (f <<< e)
+  map f (CursorX b e) = CursorX b (f <<< e)
+  map f (CursorY b e) = CursorY b (f <<< e)
+  map f (BufferLength b e) = BufferLength b (f <<< e)
+  map f (GetBufferLine b l e) = GetBufferLine b l (f <<< e)
+  map f (BufferLineLength b e) = BufferLineLength b (f <<< e)
   map f (Write s a) = Write s (f a)
   map f (WriteLn s a) = WriteLn s (f a)
   map f (FitAddon a) = FitAddon (f <<< a)
@@ -51,8 +63,23 @@ rows = liftF $ Rows identity
 cols :: TerminalM Int
 cols = liftF $ Cols identity
 
-activeBufferCursorX :: TerminalM Int
-activeBufferCursorX = liftF $ ActiveBufferCursorX identity
+activeBuffer :: TerminalM Buffer
+activeBuffer = liftF $ ActiveBuffer identity
+
+cursorX :: Buffer -> TerminalM Int
+cursorX b = liftF $ CursorX b identity
+
+cursorY :: Buffer -> TerminalM Int
+cursorY b = liftF $ CursorY b identity
+
+bufferLength :: Buffer -> TerminalM Int 
+bufferLength b = liftF $ BufferLength b identity
+
+getBufferLine :: Buffer -> Int -> TerminalM (Maybe BufferLine)
+getBufferLine b l = liftF $ GetBufferLine b l identity
+
+bufferLineLength :: BufferLine -> TerminalM Int 
+bufferLineLength b = liftF $ BufferLineLength b identity
 
 write :: String -> TerminalM Unit
 write s = liftF $ Write s unit

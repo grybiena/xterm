@@ -103,9 +103,24 @@ runTerminal = runMaybeT <<< runFreeM go
     go (Cols a) = do
       r <- H.lift $ H.query _terminal unit (Cols identity)
       MaybeT $ pure $ a <$> r
-    go (ActiveBufferCursorX a) = do
-      r <- H.lift $ H.query _terminal unit (ActiveBufferCursorX identity)
+    go (ActiveBuffer a) = do
+      r <- H.lift $ H.query _terminal unit (ActiveBuffer identity)
       MaybeT $ pure $ a <$> r
+    go (CursorX b a) = do
+      r <- H.lift $ H.query _terminal unit (CursorX b identity)
+      MaybeT $ pure $ a <$> r
+    go (CursorY b a) = do
+      r <- H.lift $ H.query _terminal unit (CursorY b identity)
+      MaybeT $ pure $ a <$> r
+    go (BufferLength b a) = do
+      r <- H.lift $ H.query _terminal unit (BufferLength b identity)
+      MaybeT $ pure $ a <$> r
+    go (GetBufferLine b l a) = do
+      r <- H.lift $ H.query _terminal unit (GetBufferLine b l a)
+      MaybeT $ pure r
+    go (BufferLineLength b a) = do
+      r <- H.lift $ H.query _terminal unit (BufferLineLength b a)
+      MaybeT $ pure r
     go (Write s a) = do
       H.lift $ H.tell _terminal unit (Write s)
       pure a
