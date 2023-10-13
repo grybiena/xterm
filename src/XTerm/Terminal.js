@@ -4,7 +4,7 @@ export const _element = term => () => term.element;
 export const _textarea = term => () => term.textarea;
 export const rows = term => () => term.rows;
 export const cols = term => () => term.cols;
-export const buffer = term => () => term.buffer;
+export const buffer = term => term.buffer;
 export const markers = term => () => term.markers;
 export const parser = term => () => term.parser;
 export const unicode = term => () => term.unicode;

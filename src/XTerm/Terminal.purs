@@ -47,7 +47,7 @@ textarea = map maybeUndefined <<< _textarea
 
 foreign import rows :: Terminal -> Effect Int
 foreign import cols :: Terminal -> Effect Int
-foreign import buffer :: Terminal -> Effect BufferNamespace
+foreign import buffer :: Terminal -> BufferNamespace
 foreign import markers :: Terminal -> Effect (Array Marker)
 foreign import parser :: Terminal -> Effect Parser
 foreign import unicode :: Terminal -> Effect UnicodeHandling

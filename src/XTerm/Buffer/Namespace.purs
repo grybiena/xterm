@@ -7,8 +7,8 @@ import XTerm.Disposable (Disposable)
 
 data BufferNamespace
 
-foreign import active :: BufferNamespace -> Effect Buffer
-foreign import normal :: BufferNamespace -> Effect Buffer
-foreign import alternate :: BufferNamespace -> Effect Buffer
+foreign import active :: BufferNamespace -> Buffer
+foreign import normal :: BufferNamespace -> Buffer
+foreign import alternate :: BufferNamespace -> Buffer
 foreign import onBufferChange :: BufferNamespace -> (Buffer -> Effect Unit) -> Effect Disposable
 

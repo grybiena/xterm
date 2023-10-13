@@ -12,6 +12,8 @@
         colors
         console
         css
+        halogen
+        halogen-css
         options
         web-dom
         web-uievents

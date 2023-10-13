@@ -42,6 +42,7 @@ rec {
                      bundle = {
                        esbuild = {
                          outfile = "test/main.js";
+                         platform = "browser";
 #                         minify = "true";
                          };
                        module = "Example.Main";
