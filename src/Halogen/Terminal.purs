@@ -3,7 +3,7 @@ module Halogen.Terminal where
 import Prelude
 
 import Data.Array ((:))
-import Data.Maybe (Maybe(..), isNothing)
+import Data.Maybe (Maybe(..))
 import Data.Traversable (traverse_)
 import Effect.Aff.Class (class MonadAff)
 import Effect.Console (log)
@@ -12,8 +12,10 @@ import Halogen.HTML as HH
 import Halogen.HTML.Properties as HP
 import Halogen.Subscription as HS
 import Web.DOM (Element)
+import XTerm.Buffer (cursorX)
+import XTerm.Buffer.Namespace (active)
 import XTerm.Disposable (Disposable, dispose)
-import XTerm.Terminal (Terminal, cols, element, onData, openTerminal, rows, textarea, write, writeln)
+import XTerm.Terminal (Terminal, buffer, cols, element, onData, openTerminal, rows, textarea, write, writeln)
 
 type State =
   { terminal :: Terminal
@@ -31,6 +33,7 @@ data Query a =
   | TextArea (Element -> a)
   | Rows (Int -> a)
   | Cols (Int -> a)
+  | ActiveBufferCursorX (Int -> a)
   | Write String a
   | WriteLn String a
 
@@ -64,7 +67,6 @@ handleAction = case _ of
     case e of
       Nothing -> H.liftEffect $ log "no terminal element"
       Just el -> do
-        H.liftEffect $ log "terminal init"
         { terminal } <- H.get
         H.liftEffect $ openTerminal terminal el
         datas <- H.liftEffect HS.create
@@ -93,11 +95,15 @@ handleQuery = case _ of
   Rows a -> do
     { terminal } <- H.get
     r <- H.liftEffect $ rows terminal
-    pure $ (Just $ a r)
+    pure (Just $ a r)
   Cols a -> do
     { terminal } <- H.get
     r <- H.liftEffect $ cols terminal
-    pure $ (Just $ a r)
+    pure (Just $ a r)
+  ActiveBufferCursorX a -> do
+    { terminal } <- H.get
+    r <- H.liftEffect $ cursorX (active $ buffer terminal)
+    pure (Just $ a r)
   Write s a -> do
     { terminal } <- H.get
     H.liftEffect $ write terminal s (pure unit)

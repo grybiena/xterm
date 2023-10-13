@@ -2,6 +2,7 @@ module Example.Main where
 
 import Prelude
 
+import Data.String (toUpper)
 import Effect (Effect)
 import Effect.Class (liftEffect)
 import Effect.Console (log)
@@ -38,7 +39,6 @@ main :: Effect Unit
 main = do
   HA.runHalogenAff do
      body <- HA.awaitBody
-     liftEffect $ log "starting halogen"
-     runUI component { prompt: "$ ", command: "" } body
+     runUI component { prompt: "$ ", command: "", shell: pure <<< toUpper } body
 
 
