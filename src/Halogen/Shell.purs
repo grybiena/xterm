@@ -14,9 +14,8 @@ import Halogen.Terminal (Output(..))
 import Halogen.Terminal as T
 import Halogen.Terminal.Free (TerminalF(..), TerminalM)
 import Type.Proxy (Proxy(..))
-import XTerm.Addons (webGLAddon, webLinksAddon)
 import XTerm.Options (cursorBlink, fontFamily)
-import XTerm.Terminal (Terminal, loadAddon, new)
+import XTerm.Terminal (Terminal, new)
 
 type Slots = ( terminal :: H.Slot TerminalF T.Output Unit )
 
@@ -63,11 +62,6 @@ handleAction = case _ of
     terminal <- H.liftEffect $ new (fontFamily := "\"Cascadia Code\", Menlo, monospace"
                                  <> cursorBlink := true
                                    ) mempty
-    H.liftEffect do
-      gl <- webGLAddon
-      loadAddon terminal gl
-      li <- webLinksAddon
-      loadAddon terminal li
     H.modify_ (\st -> st { terminal = Just terminal })
     { shell } <- H.get
     void $ runShellM $ shell.configure
@@ -118,4 +112,19 @@ runTerminal = runMaybeT <<< runFreeM go
     go (WriteLn s a) = do
       H.lift $ H.tell _terminal unit (WriteLn s)
       pure a
+    go (FitAddon a) = do
+      r <- H.lift $ H.query _terminal unit (FitAddon a)
+      MaybeT $ pure r 
+    go (WebLinksAddon a) = do
+      r <- H.lift $ H.query _terminal unit (WebLinksAddon a)
+      MaybeT $ pure r
+    go (WebGLAddon a) = do
+      r <- H.lift $ H.query _terminal unit (WebGLAddon a)
+      MaybeT $ pure r
+    go (LoadAddon t a) = do
+       r <- H.lift $ H.query _terminal unit (LoadAddon t identity)
+       MaybeT $ pure $ a <$> r
+
+
+
 

@@ -7,6 +7,7 @@ module XTerm.Addons
   , module XTerm.Addons.WebLinks
   ) where
 
+import Control.Category (identity)
 import Unsafe.Coerce (unsafeCoerce)
 import XTerm.Addons.Fit (FitAddon, fit, fitAddon)
 import XTerm.Addons.WebGL (WebGLAddon, onContextLoss, webGLAddon)
@@ -16,6 +17,9 @@ data TerminalAddon
 
 class Addon a where
   addon :: a -> TerminalAddon 
+
+instance Addon TerminalAddon where
+  addon = identity
 
 instance Addon WebGLAddon where
   addon = unsafeCoerce
