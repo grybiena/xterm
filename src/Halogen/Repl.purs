@@ -2,11 +2,10 @@ module Halogen.Repl where
 
 import Prelude
 
-import Data.Char (fromCharCode)
 import Data.Maybe (Maybe(..))
 import Data.Options ((:=))
 import Data.String (null, trim)
-import Data.String.CodeUnits (dropRight, singleton, length)
+import Data.String.CodeUnits (dropRight, length)
 import Data.Traversable (traverse_)
 import Effect.Aff.Class (class MonadAff)
 import Effect.Console (log)
@@ -15,8 +14,9 @@ import Halogen.HTML as HH
 import Halogen.Terminal (Output(..), Query(..))
 import Halogen.Terminal as Terminal
 import Type.Proxy (Proxy(..))
+import XTerm.Addons (webGLAddon, webLinksAddon)
 import XTerm.Options (cursorBlink, fontFamily)
-import XTerm.Terminal (Terminal, new)
+import XTerm.Terminal (Terminal, loadAddon, new)
 
 type Slots = ( terminal :: H.Slot Terminal.Query Terminal.Output Unit )
 
@@ -24,12 +24,12 @@ _terminal = Proxy :: Proxy "terminal"
 
 type Repl m =
   { prompt :: String
-  , command :: String
   , shell :: String -> m String
   }
 
 type State m =
   { repl :: Repl m
+  , command :: String
   , terminal :: Maybe Terminal
   }
 
@@ -41,7 +41,7 @@ data Action =
 component :: forall q o m. MonadAff m => H.Component q (Repl m) o m
 component = do
   H.mkComponent
-    { initialState: \repl -> { repl, terminal: Nothing }
+    { initialState: \repl -> { repl, command: "", terminal: Nothing }
     , render
     , eval: H.mkEval $ H.defaultEval { handleAction = handleAction
                                      , initialize = Just Initialize
@@ -63,6 +63,11 @@ handleAction = case _ of
     terminal <- H.liftEffect $ new (fontFamily := "\"Cascadia Code\", Menlo, monospace"
                                  <> cursorBlink := true
                                    ) mempty
+    H.liftEffect do
+      gl <- webGLAddon
+      loadAddon terminal gl
+      li <- webLinksAddon
+      loadAddon terminal li
     H.modify_ (\st -> st { terminal = Just terminal })
     st <- H.get
     H.tell _terminal unit (Write st.repl.prompt)
@@ -75,14 +80,14 @@ runRepl :: forall o m .
      -> H.HalogenM (State m) Action Slots o m Unit
 runRepl "\x0003" = do -- Ctrl+C
   H.tell _terminal unit (Write "^C")
-  H.modify_ (\st -> st { repl = st.repl { command = "" }})
+  H.modify_ (\st -> st { command = "" })
   st <- H.get
   H.tell _terminal unit (Write ("\r\n" <> st.repl.prompt))
 runRepl "\r" = do -- Enter
   st' <- H.get
-  H.modify_ (\st -> st { repl = st.repl { command = "" }})
-  when (not $ null $ trim st'.repl.command) do
-    r <- H.lift $ st'.repl.shell st'.repl.command
+  H.modify_ (\st -> st { command = "" })
+  when (not $ null $ trim st'.command) do
+    r <- H.lift $ st'.repl.shell st'.command
     H.tell _terminal unit (Write ("\r\n" <> r))
   st <- H.get
   H.tell _terminal unit (Write ("\r\n" <> st.repl.prompt))
@@ -92,18 +97,11 @@ runRepl "\x007F" = do -- BackSpace
   flip traverse_ blen $ \x -> do
     when (x > length st'.repl.prompt) do
        H.tell _terminal unit (Write "\x08 \x08")
-       H.modify_ (\st -> st { repl = st.repl { command = dropRight 1 st.repl.command }})
-runRepl e | isPrintable e = do -- Print all printable characters
-  H.modify_ (\st -> st { repl = st.repl { command = st.repl.command <> e }})
+       H.modify_ (\st -> st { command = dropRight 1 st.command })
+runRepl e | e >= "\x20" && e <= "\x7E" || e >= "\x00a0" = do -- Print all printable characters
+  H.modify_ (\st -> st { command = st.command <> e })
   H.tell _terminal unit (Write e)
 runRepl e = do
   H.liftEffect $ log $ "non-printable: " <> e
   pure unit
- 
-isPrintable :: String -> Boolean
-isPrintable e =
-     (Just e >= (singleton <$> fromCharCode 32))
-  && (Just e <= (singleton <$> fromCharCode 126))
-  || (e >= "\\u00a0")
-
 
