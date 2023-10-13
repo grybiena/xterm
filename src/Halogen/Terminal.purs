@@ -11,7 +11,7 @@ import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Properties as HP
 import Halogen.Subscription as HS
-import Web.DOM (Element)
+import Halogen.Terminal.Free (TerminalF(..))
 import XTerm.Buffer (cursorX)
 import XTerm.Buffer.Namespace (active)
 import XTerm.Disposable (Disposable, dispose)
@@ -27,21 +27,10 @@ data Action =
   | Finalize
   | Raise Output
 
-
-data Query a =
-    TerminalElement (Element -> a)
-  | TextArea (Element -> a)
-  | Rows (Int -> a)
-  | Cols (Int -> a)
-  | ActiveBufferCursorX (Int -> a)
-  | Write String a
-  | WriteLn String a
-
-
 data Output =
   Data String
 
-component :: forall m. MonadAff m => H.Component Query Terminal Output m
+component :: forall m. MonadAff m => H.Component TerminalF Terminal Output m
 component = do
   H.mkComponent
     { initialState: \terminal -> { terminal, disposables: [] }
@@ -81,7 +70,7 @@ handleAction = case _ of
 
 handleQuery :: forall m a .
                 MonadAff m
-             => Query a
+             => TerminalF a
              -> H.HalogenM State Action () Output m (Maybe a)
 handleQuery = case _ of
   TerminalElement a -> do

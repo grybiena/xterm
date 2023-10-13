@@ -2,6 +2,7 @@ module Halogen.Repl where
 
 import Prelude
 
+import Control.Monad.Cont (lift)
 import Data.Maybe (Maybe(..))
 import Data.Options ((:=))
 import Data.String (null, trim)
@@ -11,14 +12,16 @@ import Effect.Aff.Class (class MonadAff)
 import Effect.Console (log)
 import Halogen as H
 import Halogen.HTML as HH
-import Halogen.Terminal (Output(..), Query(..))
+import Halogen.Shell.Free (ShellM, getCommand, putCommand, terminal)
+import Halogen.Terminal (Output(..))
 import Halogen.Terminal as Terminal
+import Halogen.Terminal.Free (TerminalF(..), write)
 import Type.Proxy (Proxy(..))
 import XTerm.Addons (webGLAddon, webLinksAddon)
 import XTerm.Options (cursorBlink, fontFamily)
 import XTerm.Terminal (Terminal, loadAddon, new)
 
-type Slots = ( terminal :: H.Slot Terminal.Query Terminal.Output Unit )
+type Slots = ( terminal :: H.Slot TerminalF Terminal.Output Unit )
 
 _terminal = Proxy :: Proxy "terminal"
 
@@ -104,4 +107,4 @@ runRepl e | e >= "\x20" && e <= "\x7E" || e >= "\x00a0" = do -- Print all printa
 runRepl e = do
   H.liftEffect $ log $ "non-printable: " <> e
   pure unit
-
+      

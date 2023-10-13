@@ -1,0 +1,53 @@
+module Halogen.Terminal.Shell where
+
+import Control.Alt (class Functor, (<$>))
+import Control.Alternative (class Applicative, class Apply)
+import Control.Bind (class Bind)
+import Control.Category (identity, (<<<))
+import Control.Monad (class Monad)
+import Control.Monad.Cont (class MonadTrans, lift)
+import Control.Monad.Free (Free, liftF)
+import Control.Monad.Rec.Class (class MonadRec)
+import Data.Function (($))
+import Effect.Aff.Class (class MonadAff, liftAff)
+import Effect.Class (class MonadEffect, liftEffect)
+import Halogen.Terminal.Free (TerminalM)
+
+data ShellF m a =
+    Terminal (TerminalM a)
+  | Lift (m a)
+  | GetCommand (String -> a)
+  | PutCommand String a
+
+instance Functor m => Functor (ShellF m) where
+  map f (Terminal t) = Terminal (f <$> t)
+  map f (Lift q) = Lift (f <$> q)
+  map f (GetCommand s) = GetCommand (f <<< s)
+  map f (PutCommand s) = PutCommand (f <<< s)
+
+type ShellM m = Free (ShellF m)
+
+newtype Shell m a = Shell (ShellM m a)
+
+instance MonadTrans Shell where
+  lift = Shell <<< liftF <<< Lift
+
+instance MonadEffect m => MonadEffect (Shell m) where
+  liftEffect = lift <<< liftEffect
+
+instance MonadAff m => MonadAff (Shell m) where
+  liftAff = lift <<< liftAff
+
+derive newtype instance MonadRec (Shell m)
+derive newtype instance Functor (Shell m)
+derive newtype instance Apply (Shell m)
+derive newtype instance Applicative (Shell m)
+derive newtype instance Bind (Shell m)
+derive newtype instance Monad (Shell m)
+
+terminal :: forall m a . TerminalM a -> Shell m a
+terminal = Shell <<< liftF <<< Terminal
+
+getCommand :: forall m . Shell m String
+getCommand = Shell $ liftF $ GetCommand identity 
+
