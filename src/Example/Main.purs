@@ -13,7 +13,7 @@ import Effect.Console (log)
 import Halogen.Aff as HA
 import Halogen.Shell (component)
 import Halogen.Shell.Free (ShellM, getCommand, modifyCommand, putCommand, terminal)
-import Halogen.Terminal.Free (activeBuffer, bufferLength, bufferLineLength, cursorX, getBufferLine, loadAddon, webGLAddon, webLinksAddon, write, writeLn)
+import Halogen.Terminal.Free (TerminalM, activeBuffer, bufferLength, bufferLineLength, cursorX, getBufferLine, loadAddon, webGLAddon, webLinksAddon, write, writeLn)
 import Halogen.VDom.Driver (runUI)
 
 
@@ -24,25 +24,28 @@ main = do
      body <- HA.awaitBody
      let prompt = "$ "
          shell = { configure: terminal do
-                     wgl <- webGLAddon
-                     case wgl of
-                       Nothing -> writeLn "WebGL Addon unavailable"
-                       Just addon -> do
-                         writeLn "Loading WebGL Addon"
-                         ok <- loadAddon addon
-                         if ok then writeLn "  DONE" else writeLn "  FAILED"
-                     wli <- webLinksAddon
-                     case wli of
-                       Nothing -> writeLn "WebLinks Addon unavailable"
-                       Just addon -> do
-                         writeLn "Loading WebLinks Addon"
-                         ok <- loadAddon addon
-                         if ok then writeLn "  DONE" else writeLn "  FAILED"
-                     writeLn "Welcome to the internet"
+                     loadAddons true
                      write prompt
                  , interpret: runRepl prompt (pure <<< toUpper)
                  }
      runUI component shell body
+
+loadAddons :: Boolean -> TerminalM Unit
+loadAddons verbose = do
+  wgl <- webGLAddon
+  case wgl of
+    Nothing -> when verbose $ writeLn "WebGL Addon unavailable"
+    Just addon -> do
+      when verbose $ write "Loading WebGL "
+      ok <- loadAddon addon
+      when verbose $ if ok then writeLn "OK" else writeLn "FAILED"
+  wli <- webLinksAddon
+  case wli of
+    Nothing -> when verbose $ writeLn "WebLinks Addon unavailable"
+    Just addon -> do
+      when verbose $ write "Loading WebLinks "
+      ok <- loadAddon addon
+      when verbose $ if ok then writeLn "OK" else writeLn "FAILED"
 
 runRepl :: forall m .
             MonadEffect m
