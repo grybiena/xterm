@@ -14,7 +14,8 @@ import Halogen.Buffer.Free (bufferLength, cursorX, getBufferLine, lineLength)
 import Halogen.Shell (component)
 import Halogen.Shell.Free (ShellM, getShell, interpreter, modifyShell, putShell, terminal)
 import Halogen.Terminal as Terminal
-import Halogen.Terminal.Free (TerminalM, cols, loadAddon, rows, webGLAddon, webLinksAddon, withActiveBuffer, write, writeLn)
+import Halogen.Terminal.Free (TerminalM, cols, loadAddon, options, rows, webGLAddon, webLinksAddon, withActiveBuffer, write, writeLn)
+import Halogen.Terminal.Free.Options (getCursorBlink, setCursorBlink)
 import Halogen.VDom.Driver (runUI)
 
 
@@ -26,6 +27,13 @@ main = do
      let prompt = "$ "
          repl s | trim s == "rows" = show <$> terminal rows 
          repl s | trim s == "cols" = show <$> terminal cols
+         repl s | trim s == "blink" = show <$> terminal (options getCursorBlink)
+         repl s | trim s == "blinkon" = do
+            terminal $ options $ setCursorBlink true
+            pure ""
+         repl s | trim s == "blinkoff" = do
+            terminal $ options $ setCursorBlink false
+            pure ""
 
          repl s = pure s
          shell =

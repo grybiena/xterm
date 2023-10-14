@@ -10,7 +10,9 @@ import Data.Show (class Show, show)
 import Data.Show.Generic (genericShow)
 import Data.String (toLower)
 import Data.Tuple (Tuple(..))
-import Foreign (unsafeToForeign)
+import Data.Unit (Unit)
+import Effect (Effect)
+import Foreign (unsafeFromForeign, unsafeToForeign)
 import XTerm.Options.LinkHandler (LinkHandler, makeLinkHandler)
 import XTerm.Options.Logger (ILogger, iLogger)
 import XTerm.Options.Theme (Theme)
@@ -28,6 +30,9 @@ rows = opt "rows"
 
 data TerminalOptions
 
+terminalOptions :: Options TerminalOptions -> TerminalOptions
+terminalOptions = unsafeFromForeign <<< options
+
 type TerminalOption = Option TerminalOptions
 
 allowProposedApi :: TerminalOption Boolean
@@ -44,6 +49,9 @@ convertEol = opt "covertEol"
 
 cursorBlink :: TerminalOption Boolean
 cursorBlink = opt "cursorBlink"
+
+foreign import getCursorBlink :: TerminalOptions -> Effect Boolean
+foreign import setCursorBlink :: TerminalOptions -> Boolean -> Effect Unit
 
 data CursorStyle = Block | Underline | Bar
 

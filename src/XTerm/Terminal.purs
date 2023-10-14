@@ -51,12 +51,8 @@ foreign import markers :: Terminal -> Effect (Array Marker)
 foreign import parser :: Terminal -> Effect Parser
 foreign import unicode :: Terminal -> Effect UnicodeHandling
 foreign import modes :: Terminal -> Effect Modes
-
-foreign import _setOptions :: Terminal -> Foreign -> Effect Unit
-
-setOptions :: Terminal -> Options TerminalOptions -> Effect Unit 
-setOptions t o = _setOptions t (options o)
-
+foreign import setOptions :: Terminal -> TerminalOptions -> Effect Unit
+foreign import getOptions :: Terminal -> TerminalOptions
 foreign import onBell :: Terminal -> Effect Unit -> Effect Disposable
 newtype BinaryString = BinaryString String
 foreign import onBinary :: Terminal -> (BinaryString -> Effect Unit) -> Effect Disposable

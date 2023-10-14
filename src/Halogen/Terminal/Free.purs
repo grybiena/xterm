@@ -12,12 +12,13 @@ import Effect.Aff.AVar as AVar
 import Effect.Aff.Class (class MonadAff, liftAff)
 import Effect.Class (liftEffect)
 import Halogen.Buffer.Free (BufferM, runBuffer)
+import Halogen.Terminal.Free.Options (OptionsM, runOptions)
 import Web.DOM (Element)
 import XTerm.Addons (class Addon, FitAddon, TerminalAddon, WebGLAddon, WebLinksAddon, addon)
 import XTerm.Addons as XA
 import XTerm.Buffer.Namespace as XB
 import XTerm.Marker (Marker)
-import XTerm.Terminal (Terminal)
+import XTerm.Terminal (Terminal, getOptions)
 import XTerm.Terminal as XT
 
 
@@ -28,6 +29,9 @@ runTerminal :: forall m a .
             -> ReaderT Terminal m a
 runTerminal = runFreeM go
   where
+    go (Options o) = do
+       terminal <- ask
+       runReaderT (runOptions o) (getOptions terminal)
     go (TerminalElement a) = do
       terminal <- ask
       liftEffect $ a <$> XT.element terminal
@@ -73,7 +77,8 @@ runTerminal = runFreeM go
        liftEffect $ (a <<< isRight) <$> try (XT.loadAddon terminal t)
 
 data TerminalF a =
-    TerminalElement (Maybe Element -> a)
+    Options (OptionsM a)
+  | TerminalElement (Maybe Element -> a)
   | TextArea (Maybe Element -> a)
   | Rows (Int -> a)
   | Cols (Int -> a)
@@ -89,6 +94,7 @@ data TerminalF a =
   | LoadAddon TerminalAddon (Boolean -> a)
 
 instance Functor TerminalF where
+  map f (Options o) = Options (f <$> o)
   map f (TerminalElement e) = TerminalElement (f <<< e)
   map f (TextArea e) = TextArea (f <<< e)
   map f (Rows e) = Rows (f <<< e)
@@ -105,6 +111,9 @@ instance Functor TerminalF where
   map f (LoadAddon t a) = LoadAddon t (f <<< a)
 
 type TerminalM = Free TerminalF 
+
+options :: forall a . OptionsM a -> TerminalM a
+options = liftF <<< Options
 
 terminalElement :: TerminalM (Maybe Element)
 terminalElement = liftF $ TerminalElement identity
