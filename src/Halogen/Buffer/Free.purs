@@ -13,6 +13,37 @@ import XTerm.Buffer.Cell (BufferCell)
 import XTerm.Buffer.Line (BufferLine)
 import XTerm.Buffer.Line as L
 
+runBuffer :: forall m a . MonadEffect m => MonadRec m => BufferM a -> ReaderT Buffer m a
+runBuffer = runFreeM go
+  where
+    go (BufferType a) = do
+      b <- ask
+      liftEffect $ a <$> X.bufferType b
+    go (CursorX a) = do
+      b <- ask
+      liftEffect $ a <$> X.cursorX b
+    go (CursorY a) = do
+      b <- ask
+      liftEffect $ a <$> X.cursorY b
+    go (ViewportY a) = do
+      b <- ask
+      liftEffect $ a <$> X.viewportY b
+    go (BaseY a) = do
+      b <- ask
+      liftEffect $ a <$> X.baseY b
+    go (BufferLength a) = do
+      b <- ask
+      liftEffect $ a <$> X.length b
+    go (GetBufferLine i a) = do
+      b <- ask
+      liftEffect $ a <$> X.getLine b i
+    go (IsWrapped l a) = do
+      liftEffect $ a <$> L.isWrapped l
+    go (LineLength l a) = do
+      liftEffect $ a <$> L.length l
+    go (GetNullCell a) = do
+      b <- ask
+      liftEffect $ a <$> X.getNullCell b
 
 
 data BufferF a =
@@ -72,37 +103,4 @@ isWrapped l = liftF $ IsWrapped l identity
 
 lineLength :: BufferLine -> BufferM Int
 lineLength l = liftF $ LineLength l identity
-
-runBuffer :: forall m a . MonadEffect m => MonadRec m => BufferM a -> ReaderT Buffer m a
-runBuffer = runFreeM go
-  where
-    go (BufferType a) = do
-      b <- ask
-      liftEffect $ a <$> X.bufferType b
-    go (CursorX a) = do
-      b <- ask
-      liftEffect $ a <$> X.cursorX b
-    go (CursorY a) = do
-      b <- ask
-      liftEffect $ a <$> X.cursorY b
-    go (ViewportY a) = do
-      b <- ask
-      liftEffect $ a <$> X.viewportY b
-    go (BaseY a) = do
-      b <- ask
-      liftEffect $ a <$> X.baseY b
-    go (BufferLength a) = do
-      b <- ask
-      liftEffect $ a <$> X.length b
-    go (GetBufferLine i a) = do
-      b <- ask
-      liftEffect $ a <$> X.getLine b i
-    go (IsWrapped l a) = do
-      liftEffect $ a <$> L.isWrapped l
-    go (LineLength l a) = do
-      liftEffect $ a <$> L.length l
-    go (GetNullCell a) = do
-      b <- ask
-      liftEffect $ a <$> X.getNullCell b
-
 

@@ -4,23 +4,17 @@ import Prelude
 
 import Control.Monad.Reader (runReaderT)
 import Data.Array ((:))
-import Data.Either (hush, isRight)
 import Data.Maybe (Maybe(..))
 import Data.Traversable (traverse_)
-import Effect.Aff (launchAff_, try)
-import Effect.Aff.AVar as AVar
 import Effect.Aff.Class (class MonadAff)
 import Effect.Console (log)
 import Halogen as H
-import Halogen.Buffer.Free (runBuffer)
 import Halogen.HTML as HH
 import Halogen.HTML.Properties as HP
 import Halogen.Subscription as HS
-import Halogen.Terminal.Free (TerminalF(..))
-import XTerm.Addons (fitAddon, webGLAddon, webLinksAddon)
-import XTerm.Buffer.Namespace (active)
+import Halogen.Terminal.Free (TerminalM, runTerminal)
 import XTerm.Disposable (Disposable, dispose)
-import XTerm.Terminal (BinaryString, Key, RowRange, Terminal, ViewportSize, ViewportYOffset, buffer, cols, element, loadAddon, onBell, onBinary, onData, onKey, onLineFeed, onRender, onResize, onScroll, onSelectionChange, onTitleChange, onWriteParsed, openTerminal, rows, textarea, write, writeln)
+import XTerm.Terminal (BinaryString, Key, RowRange, Terminal, ViewportSize, ViewportYOffset, onBell, onBinary, onData, onKey, onLineFeed, onRender, onResize, onScroll, onSelectionChange, onTitleChange, onWriteParsed, openTerminal)
 
 type State =
   { terminal :: Terminal
@@ -45,7 +39,7 @@ data Output =
   | SelectionChange
   | TitleChange String
 
-component :: forall m. MonadAff m => H.Component TerminalF Terminal Output m
+component :: forall m. MonadAff m => H.Component TerminalM Terminal Output m
 component = do
   H.mkComponent
     { initialState: \terminal -> { terminal, disposables: [] }
@@ -149,51 +143,9 @@ handleAction = case _ of
 
 handleQuery :: forall m a .
                 MonadAff m
-             => TerminalF a
+             => TerminalM a
              -> H.HalogenM State Action () Output m (Maybe a)
-handleQuery = case _ of
-  TerminalElement a -> do
-    { terminal } <- H.get
-    e <- H.liftEffect $ element terminal 
-    pure (a <$> e)
-  TextArea a -> do
-    { terminal } <- H.get
-    e <- H.liftEffect $ textarea terminal 
-    pure (a <$> e)
-  Rows a -> do
-    { terminal } <- H.get
-    r <- H.liftEffect $ rows terminal
-    pure (Just $ a r)
-  Cols a -> do
-    { terminal } <- H.get
-    r <- H.liftEffect $ cols terminal
-    pure (Just $ a r)
-  WithActiveBuffer f -> do
-    { terminal } <- H.get
-    H.liftEffect $ Just <$> runReaderT (runBuffer f) (active $ buffer terminal)
-  Write s a -> do
-    { terminal } <- H.get
-    sem <- H.liftAff $ AVar.empty
-    H.liftEffect $ write terminal s (launchAff_ $ AVar.put unit sem)
-    H.liftAff $ AVar.take sem
-    pure (Just a)
-  WriteLn s a -> do
-    { terminal } <- H.get
-    sem <- H.liftAff $ AVar.empty
-    H.liftEffect $ writeln terminal s (launchAff_ $ AVar.put unit sem)
-    H.liftAff $ AVar.take sem
-    pure (Just a)
-  FitAddon a -> do
-    f <- H.liftEffect $ try fitAddon
-    pure (Just $ a $ hush f)
-  WebLinksAddon a -> do
-    f <- H.liftEffect $ try webLinksAddon
-    pure (Just $ a $ hush f)
-  WebGLAddon a -> do
-    f <- H.liftEffect $ try webGLAddon
-    pure (Just $ a $ hush f)
-  LoadAddon t a -> do
-    { terminal } <- H.get
-    f <- H.liftEffect $ try $ loadAddon terminal t
-    pure (Just (a (isRight f)))
+handleQuery f = do 
+  { terminal } <- H.get
+  H.liftAff $ Just <$> runReaderT (runTerminal f) terminal
 

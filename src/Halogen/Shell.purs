@@ -12,12 +12,12 @@ import Halogen.HTML as HH
 import Halogen.Shell.Free (ShellF(..), ShellM(..))
 import Halogen.Terminal (Output(..))
 import Halogen.Terminal as T
-import Halogen.Terminal.Free (TerminalF(..), TerminalM)
+import Halogen.Terminal.Free (TerminalM)
 import Type.Proxy (Proxy(..))
 import XTerm.Options (cursorBlink, fontFamily)
 import XTerm.Terminal (Terminal, new)
 
-type Slots = ( terminal :: H.Slot TerminalF T.Output Unit )
+type Slots = ( terminal :: H.Slot TerminalM T.Output Unit )
 
 _terminal = Proxy :: Proxy "terminal"
 
@@ -84,14 +84,15 @@ handleQuery (Query q f) = do
   pure $ f <$> r
 
 
-
 runShellM :: forall q r o m a .
             MonadAff m
          => ShellM o m a
          -> H.HalogenM (State q r o m) Action Slots o m (Maybe a)
 runShellM (ShellM s) = runMaybeT $ runFreeM go s
   where
-    go (Terminal t) = MaybeT $ runTerminal t
+    go (Terminal f) = do
+      r <- H.lift $ H.query _terminal unit f
+      MaybeT $ pure r
     go (Lift m) = MaybeT $ Just <$> H.lift m
     go (GetCommand a) = do
       { command } <- H.lift H.get
@@ -105,48 +106,5 @@ runShellM (ShellM s) = runMaybeT $ runFreeM go s
     go (Output o a) = do
       H.lift $ H.raise o
       pure a
-
-
-runTerminal :: forall q r o m a .
-               MonadAff m
-            => TerminalM a
-            -> H.HalogenM (State q r o m) Action Slots o m (Maybe a)
-runTerminal = runMaybeT <<< runFreeM go
-  where
-    go (TerminalElement a) = do
-      r <- H.lift $ H.query _terminal unit (TerminalElement identity)
-      MaybeT $ pure $ a <$> r
-    go (TextArea a) = do
-      r <- H.lift $ H.query _terminal unit (TextArea identity)
-      MaybeT $ pure $ a <$> r
-    go (Rows a) = do
-      r <- H.lift $ H.query _terminal unit (Rows identity)
-      MaybeT $ pure $ a <$> r
-    go (Cols a) = do
-      r <- H.lift $ H.query _terminal unit (Cols identity)
-      MaybeT $ pure $ a <$> r
-    go (WithActiveBuffer f) = do
-      r <- H.lift $ H.query _terminal unit (WithActiveBuffer f)
-      MaybeT $ pure r
-    go (Write s a) = do
-      H.lift $ H.tell _terminal unit (Write s)
-      pure a
-    go (WriteLn s a) = do
-      H.lift $ H.tell _terminal unit (WriteLn s)
-      pure a
-    go (FitAddon a) = do
-      r <- H.lift $ H.query _terminal unit (FitAddon a)
-      MaybeT $ pure r 
-    go (WebLinksAddon a) = do
-      r <- H.lift $ H.query _terminal unit (WebLinksAddon a)
-      MaybeT $ pure r
-    go (WebGLAddon a) = do
-      r <- H.lift $ H.query _terminal unit (WebGLAddon a)
-      MaybeT $ pure r
-    go (LoadAddon t a) = do
-       r <- H.lift $ H.query _terminal unit (LoadAddon t identity)
-       MaybeT $ pure $ a <$> r
-
-
 
 

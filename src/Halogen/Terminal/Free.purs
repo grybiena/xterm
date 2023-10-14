@@ -1,20 +1,70 @@
 module Halogen.Terminal.Free where
 
-import Control.Alt (class Functor, (<$>))
-import Control.Category (identity, (<<<))
-import Control.Monad.Free (Free, liftF)
-import Data.Function (($))
+import Prelude
+
+import Control.Monad.Free (Free, liftF, runFreeM)
+import Control.Monad.Reader (ReaderT, ask, runReaderT)
+import Control.Monad.Rec.Class (class MonadRec)
+import Data.Either (hush, isRight)
 import Data.Maybe (Maybe)
-import Data.Unit (Unit, unit)
-import Halogen.Buffer.Free (BufferM)
+import Effect.Aff (launchAff_, try)
+import Effect.Aff.AVar as AVar
+import Effect.Aff.Class (class MonadAff, liftAff)
+import Effect.Class (liftEffect)
+import Halogen.Buffer.Free (BufferM, runBuffer)
 import Web.DOM (Element)
 import XTerm.Addons (class Addon, FitAddon, TerminalAddon, WebGLAddon, WebLinksAddon, addon)
+import XTerm.Addons as XA
+import XTerm.Buffer.Namespace as XB
+import XTerm.Terminal (Terminal)
+import XTerm.Terminal as XT
 
 
+runTerminal :: forall m a .
+               MonadAff m
+            => MonadRec m
+            => TerminalM a
+            -> ReaderT Terminal m a
+runTerminal = runFreeM go
+  where
+    go (TerminalElement a) = do
+      terminal <- ask
+      liftEffect $ a <$> XT.element terminal
+    go (TextArea a) = do
+      terminal <- ask
+      liftEffect $ a <$> XT.textarea terminal
+    go (Rows a) = do
+      terminal <- ask
+      liftEffect $ a <$> XT.rows terminal
+    go (Cols a) = do
+      terminal <- ask
+      liftEffect $ a <$> XT.cols terminal
+    go (WithActiveBuffer f) = do
+      terminal <- ask
+      liftEffect $ runReaderT (runBuffer f) (XB.active $ XT.buffer terminal)
+    go (Write s a) = do
+      terminal <- ask
+      sem <- liftAff $ AVar.empty
+      liftEffect $ XT.write terminal s (launchAff_ $ AVar.put a sem)
+      liftAff $ AVar.take sem
+    go (WriteLn s a) = do
+      terminal <- ask
+      sem <- liftAff $ AVar.empty
+      liftEffect $ XT.writeln terminal s (launchAff_ $ AVar.put a sem)
+      liftAff $ AVar.take sem
+    go (FitAddon a) = do
+      liftEffect $ (a <<< hush) <$> try XA.fitAddon
+    go (WebLinksAddon a) = do
+      liftEffect $ (a <<< hush) <$> try XA.webLinksAddon 
+    go (WebGLAddon a) = do
+      liftEffect $ (a <<< hush) <$> try XA.webGLAddon 
+    go (LoadAddon t a) = do
+       terminal <- ask
+       liftEffect $ (a <<< isRight) <$> try (XT.loadAddon terminal t)
 
 data TerminalF a =
-    TerminalElement (Element -> a)
-  | TextArea (Element -> a)
+    TerminalElement (Maybe Element -> a)
+  | TextArea (Maybe Element -> a)
   | Rows (Int -> a)
   | Cols (Int -> a)
   | WithActiveBuffer (BufferM a) 
@@ -40,10 +90,10 @@ instance Functor TerminalF where
 
 type TerminalM = Free TerminalF 
 
-terminalElement :: TerminalM Element
+terminalElement :: TerminalM (Maybe Element)
 terminalElement = liftF $ TerminalElement identity
 
-textArea :: TerminalM Element
+textArea :: TerminalM (Maybe Element)
 textArea = liftF $ TextArea identity
 
 rows :: TerminalM Int
