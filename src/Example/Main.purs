@@ -49,10 +49,10 @@ loadAddons verbose = do
       ok <- loadAddon addon
       when verbose $ if ok then writeLn "OK" else writeLn "FAILED"
 
-runRepl :: forall m .
+runRepl :: forall o m .
             MonadEffect m
-         => String -> (String -> ShellM m String)
-         -> String -> ShellM m Unit 
+         => String -> (String -> ShellM o m String)
+         -> String -> ShellM o m Unit 
 runRepl prompt repl =
   case _ of
     -- Ctrl+C

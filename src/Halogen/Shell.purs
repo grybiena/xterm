@@ -21,14 +21,14 @@ type Slots = ( terminal :: H.Slot TerminalF T.Output Unit )
 
 _terminal = Proxy :: Proxy "terminal"
 
-type Shell q r m =
-  { init :: ShellM m Unit
-  , query :: q -> ShellM m r
+type Shell q r o m =
+  { init :: ShellM o m Unit
+  , query :: q -> ShellM o m r
   }
 
-type State q r m =
-  { shell :: Shell q r m
-  , interpret :: String -> ShellM m Unit
+type State q r o m =
+  { shell :: Shell q r o m
+  , interpret :: String -> ShellM o m Unit
   , command :: String
   , terminal :: Maybe Terminal
   }
@@ -40,7 +40,7 @@ data Action =
 data Query q r a = Query q (r -> a)
 
 
-component :: forall q r o m. MonadAff m => H.Component (Query q r) (Shell q r m) o m
+component :: forall q r o m. MonadAff m => H.Component (Query q r) (Shell q r o m) o m
 component = do
   H.mkComponent
     { initialState: \shell -> { shell, interpret: const (pure unit), command: "", terminal: Nothing }
@@ -51,7 +51,7 @@ component = do
                                      }
     }
 
-render :: forall q r m. MonadAff m => State q r m -> H.ComponentHTML Action Slots m
+render :: forall q r o m. MonadAff m => State q r o m -> H.ComponentHTML Action Slots m
 render { terminal } =
   case terminal of
     Nothing -> HH.div_ []
@@ -60,7 +60,7 @@ render { terminal } =
 handleAction :: forall q r o m .
                 MonadAff m
              => Action
-             -> H.HalogenM (State q r m) Action Slots o m Unit
+             -> H.HalogenM (State q r o m) Action Slots o m Unit
 handleAction = case _ of
   Initialize -> do
     terminal <- H.liftEffect $ new (fontFamily := "\"Cascadia Code\", Menlo, monospace"
@@ -76,7 +76,7 @@ handleAction = case _ of
 handleQuery :: forall q r o m a .
                 MonadAff m
              => Query q r a
-             -> H.HalogenM (State q r m) Action Slots o m (Maybe a)
+             -> H.HalogenM (State q r o m) Action Slots o m (Maybe a)
 handleQuery (Query q f) = do
   { shell } <- H.get
   r <- runShellM $ shell.query q
@@ -86,8 +86,8 @@ handleQuery (Query q f) = do
 
 runShellM :: forall q r o m a .
             MonadAff m
-         => ShellM m a
-         -> H.HalogenM (State q r m) Action Slots o m (Maybe a)
+         => ShellM o m a
+         -> H.HalogenM (State q r o m) Action Slots o m (Maybe a)
 runShellM (ShellM s) = runMaybeT $ runFreeM go s
   where
     go (Terminal t) = MaybeT $ runTerminal t
@@ -101,12 +101,15 @@ runShellM (ShellM s) = runMaybeT $ runFreeM go s
     go (Interpret i a) = do
       H.modify_ (\st -> st { interpret = i })
       pure a
+    go (Output o a) = do
+      H.lift $ H.raise o
+      pure a
 
 
 runTerminal :: forall q r o m a .
                MonadAff m
             => TerminalM a
-            -> H.HalogenM (State q r m) Action Slots o m (Maybe a)
+            -> H.HalogenM (State q r o m) Action Slots o m (Maybe a)
 runTerminal = runMaybeT <<< runFreeM go
   where
     go (TerminalElement a) = do
