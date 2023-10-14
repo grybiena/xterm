@@ -21,26 +21,22 @@ type Slots = ( terminal :: H.Slot TerminalF T.Output Unit )
 
 _terminal = Proxy :: Proxy "terminal"
 
-type Shell m =
-  { configure :: ShellM m Unit
-  , interpret :: String -> ShellM m Unit
-  }
-
 type State m =
-  { shell :: Shell m
+  { init :: ShellM m Unit
+  , interpret :: String -> ShellM m Unit
   , command :: String
   , terminal :: Maybe Terminal
   }
 
 data Action =
     Initialize
-  | TerminalOutput T.Output
+  | TerminalInput T.Output
 
 
-component :: forall q o m. MonadAff m => H.Component q (Shell m) o m
+component :: forall q o m. MonadAff m => H.Component q (ShellM m Unit) o m
 component = do
   H.mkComponent
-    { initialState: \shell -> { shell, command: "", terminal: Nothing }
+    { initialState: \init -> { init, interpret: const (pure unit), command: "", terminal: Nothing }
     , render
     , eval: H.mkEval $ H.defaultEval { handleAction = handleAction
                                      , initialize = Just Initialize
@@ -51,7 +47,7 @@ render :: forall m. MonadAff m => State m -> H.ComponentHTML Action Slots m
 render { terminal } =
   case terminal of
     Nothing -> HH.div_ []
-    Just te -> HH.slot _terminal unit T.component te TerminalOutput
+    Just te -> HH.slot _terminal unit T.component te TerminalInput
 
 handleAction :: forall o m .
                 MonadAff m
@@ -63,11 +59,11 @@ handleAction = case _ of
                                  <> cursorBlink := true
                                    ) mempty
     H.modify_ (\st -> st { terminal = Just terminal })
-    { shell } <- H.get
-    void $ runShellM $ shell.configure
-  TerminalOutput (Data d) -> do
-     { shell } <- H.get
-     void $ runShellM $ shell.interpret d
+    { init } <- H.get
+    void $ runShellM $ init
+  TerminalInput (Data d) -> do
+     { interpret } <- H.get
+     void $ runShellM $ interpret d
 
 runShellM :: forall o m a .
             MonadAff m
@@ -79,10 +75,13 @@ runShellM (ShellM s) = runMaybeT $ runFreeM go s
     go (Lift m) = MaybeT $ Just <$> H.lift m
     go (GetCommand a) = do
       { command } <- H.lift H.get
-      MaybeT $ pure $ Just $ a command
+      pure $ a command
     go (PutCommand c a) = do
       H.modify_ (\st -> st { command = c })
-      MaybeT $ pure $ Just a 
+      pure a
+    go (Interpret i a) = do
+      H.modify_ (\st -> st { interpret = i })
+      pure a
 
 
 runTerminal :: forall o m a .

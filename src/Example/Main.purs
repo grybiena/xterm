@@ -2,7 +2,6 @@ module Example.Main where
 
 import Prelude
 
-import Control.Monad.Cont (lift)
 import Data.Maybe (Maybe(..))
 import Data.String (null, trim, length, toUpper)
 import Data.String.CodeUnits (dropRight, takeRight)
@@ -12,7 +11,7 @@ import Effect.Class (class MonadEffect, liftEffect)
 import Effect.Console (log)
 import Halogen.Aff as HA
 import Halogen.Shell (component)
-import Halogen.Shell.Free (ShellM, getCommand, modifyCommand, putCommand, terminal)
+import Halogen.Shell.Free (ShellM, getCommand, interpret, modifyCommand, putCommand, terminal)
 import Halogen.Terminal.Free (TerminalM, activeBuffer, bufferLength, bufferLineLength, cursorX, getBufferLine, loadAddon, webGLAddon, webLinksAddon, write, writeLn)
 import Halogen.VDom.Driver (runUI)
 
@@ -23,11 +22,11 @@ main = do
   HA.runHalogenAff do
      body <- HA.awaitBody
      let prompt = "$ "
-         shell = { configure: terminal do
-                     loadAddons true
-                     write prompt
-                 , interpret: runRepl prompt (pure <<< toUpper)
-                 }
+         shell = do
+            terminal do
+              loadAddons true
+              write prompt
+            interpret (runRepl prompt (pure <<< toUpper))
      runUI component shell body
 
 loadAddons :: Boolean -> TerminalM Unit
@@ -49,7 +48,7 @@ loadAddons verbose = do
 
 runRepl :: forall m .
             MonadEffect m
-         => String -> (String -> m String)
+         => String -> (String -> ShellM m String)
          -> String -> ShellM m Unit 
 runRepl prompt repl =
   case _ of
@@ -63,7 +62,7 @@ runRepl prompt repl =
     "\r" -> do
        cmd <- getCommand
        putCommand ""
-       res <- lift $ repl cmd
+       res <- repl cmd
        terminal do
          when (not $ null $ trim cmd) $
            write ("\r\n" <> res) 

@@ -14,12 +14,14 @@ data ShellF m a =
   | Lift (m a)
   | GetCommand (String -> a)
   | PutCommand String a
+  | Interpret (String -> ShellM m Unit) a
 
 instance Functor m => Functor (ShellF m) where
   map f (Terminal t) = Terminal (f <$> t)
   map f (Lift q) = Lift (f <$> q)
   map f (GetCommand s) = GetCommand (f <<< s)
   map f (PutCommand s a) = PutCommand s (f a)
+  map f (Interpret s a) = Interpret s (f a)
 
 type Shell m = Free (ShellF m)
 
@@ -54,4 +56,8 @@ modifyCommand :: forall m . (String -> String) -> ShellM m Unit
 modifyCommand f = do
   cmd <- getCommand
   putCommand (f cmd)
+
+interpret :: forall m . (String -> ShellM m Unit) -> ShellM m Unit
+interpret i = ShellM $ liftF $ Interpret i unit
+
 
