@@ -18,7 +18,6 @@ import Halogen.HTML.Properties as HP
 import Halogen.Subscription as HS
 import Halogen.Terminal.Free (TerminalF(..))
 import XTerm.Addons (fitAddon, webGLAddon, webLinksAddon)
-import XTerm.Buffer.Line as BL
 import XTerm.Buffer.Namespace (active)
 import XTerm.Disposable (Disposable, dispose)
 import XTerm.Terminal (Terminal, buffer, cols, element, loadAddon, onData, openTerminal, rows, textarea, write, writeln)
@@ -95,9 +94,6 @@ handleQuery = case _ of
     { terminal } <- H.get
     r <- H.liftEffect $ cols terminal
     pure (Just $ a r)
-  BufferLineLength b a -> do
-    x <- H.liftEffect $ BL.length b
-    pure $ Just $ a x
   WithActiveBuffer f -> do
     { terminal } <- H.get
     H.liftEffect $ Just <$> runReaderT (runBuffer f) (active $ buffer terminal)

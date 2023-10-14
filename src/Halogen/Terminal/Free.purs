@@ -9,7 +9,6 @@ import Data.Unit (Unit, unit)
 import Halogen.Buffer.Free (BufferM)
 import Web.DOM (Element)
 import XTerm.Addons (class Addon, FitAddon, TerminalAddon, WebGLAddon, WebLinksAddon, addon)
-import XTerm.Buffer.Line (BufferLine)
 
 
 
@@ -18,7 +17,6 @@ data TerminalF a =
   | TextArea (Element -> a)
   | Rows (Int -> a)
   | Cols (Int -> a)
-  | BufferLineLength BufferLine (Int -> a)
   | WithActiveBuffer (BufferM a) 
   | Write String a
   | WriteLn String a
@@ -32,7 +30,6 @@ instance Functor TerminalF where
   map f (TextArea e) = TextArea (f <<< e)
   map f (Rows e) = Rows (f <<< e)
   map f (Cols e) = Cols (f <<< e)
-  map f (BufferLineLength b e) = BufferLineLength b (f <<< e)
   map f (WithActiveBuffer b) = WithActiveBuffer (f <$> b)
   map f (Write s a) = Write s (f a)
   map f (WriteLn s a) = WriteLn s (f a)
@@ -54,9 +51,6 @@ rows = liftF $ Rows identity
 
 cols :: TerminalM Int
 cols = liftF $ Cols identity
-
-bufferLineLength :: BufferLine -> TerminalM Int 
-bufferLineLength b = liftF $ BufferLineLength b identity
 
 withActiveBuffer :: forall a . BufferM a -> TerminalM a
 withActiveBuffer b = liftF $ WithActiveBuffer b

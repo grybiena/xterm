@@ -124,9 +124,6 @@ runTerminal = runMaybeT <<< runFreeM go
     go (Cols a) = do
       r <- H.lift $ H.query _terminal unit (Cols identity)
       MaybeT $ pure $ a <$> r
-    go (BufferLineLength b a) = do
-      r <- H.lift $ H.query _terminal unit (BufferLineLength b a)
-      MaybeT $ pure r
     go (WithActiveBuffer f) = do
       r <- H.lift $ H.query _terminal unit (WithActiveBuffer f)
       MaybeT $ pure r

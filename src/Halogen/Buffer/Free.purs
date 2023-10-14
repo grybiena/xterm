@@ -10,6 +10,7 @@ import Effect.Class (class MonadEffect, liftEffect)
 import XTerm.Buffer (Buffer, BufferType)
 import XTerm.Buffer as X
 import XTerm.Buffer.Line (BufferLine)
+import XTerm.Buffer.Line as L
 
 
 
@@ -19,6 +20,9 @@ data BufferF a =
   | CursorY (Int -> a)
   | BufferLength (Int -> a)
   | GetBufferLine Int (Maybe BufferLine -> a)
+  | IsWrapped BufferLine (Boolean -> a)
+  | LineLength BufferLine (Int -> a)
+
 
 instance Functor BufferF where
   map f (BufferType e) = BufferType (f <<< e)
@@ -26,6 +30,9 @@ instance Functor BufferF where
   map f (CursorY e) = CursorY (f <<< e)
   map f (BufferLength e) = BufferLength (f <<< e)
   map f (GetBufferLine l e) = GetBufferLine l (f <<< e)
+  map f (IsWrapped l e) = IsWrapped l (f <<< e)
+  map f (LineLength l e) = LineLength l (f <<< e)
+
 
 type BufferM = Free BufferF 
 
@@ -43,6 +50,12 @@ bufferLength = liftF $ BufferLength identity
 
 getBufferLine :: Int -> BufferM (Maybe BufferLine)
 getBufferLine l = liftF $ GetBufferLine l identity
+
+isWrapped :: BufferLine -> BufferM Boolean
+isWrapped l = liftF $ IsWrapped l identity
+
+lineLength :: BufferLine -> BufferM Int
+lineLength l = liftF $ LineLength l identity
 
 runBuffer :: forall m a . MonadEffect m => MonadRec m => BufferM a -> ReaderT Buffer m a
 runBuffer = runFreeM go
@@ -62,4 +75,9 @@ runBuffer = runFreeM go
     go (GetBufferLine i a) = do
       b <- ask
       liftEffect $ a <$> X.getLine b i
+    go (IsWrapped l a) = do
+      liftEffect $ a <$> L.isWrapped l
+    go (LineLength l a) = do
+      liftEffect $ a <$> L.length l
+
 
