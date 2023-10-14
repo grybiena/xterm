@@ -79,7 +79,10 @@ runRepl prompt repl =
     "\r" -> do
        cmd <- getShell
        putShell ""
+       interpreter (const (pure unit))
        res <- repl cmd
+       when (cmd /= "stop") do
+         interpreter (textInterpreter $ runRepl prompt (pure <<< toUpper))
        terminal do
          when (not $ null $ trim cmd) $
            write ("\r\n" <> res) 
