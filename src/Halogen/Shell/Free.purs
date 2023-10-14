@@ -10,59 +10,59 @@ import Effect.Class (class MonadEffect, liftEffect)
 import Halogen.Terminal as Terminal
 import Halogen.Terminal.Free (TerminalM)
 
-data ShellF o m a =
+data ShellF s o m a =
     Terminal (TerminalM a)
   | Lift (m a)
-  | GetCommand (String -> a)
-  | PutCommand String a
-  | Interpreter (Terminal.Output -> ShellM o m Unit) a
+  | GetShell (s -> a)
+  | PutShell s a
+  | Interpreter (Terminal.Output -> ShellM s o m Unit) a
   | Output o a
 
-instance Functor m => Functor (ShellF o m) where
+instance Functor m => Functor (ShellF s o m) where
   map f (Terminal t) = Terminal (f <$> t)
   map f (Lift q) = Lift (f <$> q)
-  map f (GetCommand s) = GetCommand (f <<< s)
-  map f (PutCommand s a) = PutCommand s (f a)
+  map f (GetShell s) = GetShell (f <<< s)
+  map f (PutShell s a) = PutShell s (f a)
   map f (Interpreter s a) = Interpreter s (f a)
   map f (Output o a) = Output o (f a)
 
-type Shell o m = Free (ShellF o m)
+type Shell s o m = Free (ShellF s o m)
 
-newtype ShellM o m a = ShellM (Shell o m a)
+newtype ShellM s o m a = ShellM (Shell s o m a)
 
-instance MonadTrans (ShellM o) where
+instance MonadTrans (ShellM s o) where
   lift = ShellM <<< liftF <<< Lift
 
-instance MonadEffect m => MonadEffect (ShellM o m) where
+instance MonadEffect m => MonadEffect (ShellM s o m) where
   liftEffect = lift <<< liftEffect
 
-instance MonadAff m => MonadAff (ShellM o m) where
+instance MonadAff m => MonadAff (ShellM s o m) where
   liftAff = lift <<< liftAff
 
-derive newtype instance MonadRec (ShellM o m)
-derive newtype instance Functor (ShellM o m)
-derive newtype instance Apply (ShellM o m)
-derive newtype instance Applicative (ShellM o m)
-derive newtype instance Bind (ShellM o m)
-derive newtype instance Monad (ShellM o m)
+derive newtype instance MonadRec (ShellM s o m)
+derive newtype instance Functor (ShellM s o m)
+derive newtype instance Apply (ShellM s o m)
+derive newtype instance Applicative (ShellM s o m)
+derive newtype instance Bind (ShellM s o m)
+derive newtype instance Monad (ShellM s o m)
 
-terminal :: forall o m a . TerminalM a -> ShellM o m a
+terminal :: forall s o m a . TerminalM a -> ShellM s o m a
 terminal = ShellM <<< liftF <<< Terminal
 
-getCommand :: forall o m . ShellM o m String
-getCommand = ShellM $ liftF $ GetCommand identity 
+getShell :: forall s o m . ShellM s o m s
+getShell = ShellM $ liftF $ GetShell identity 
 
-putCommand :: forall o m . String -> ShellM o m Unit
-putCommand s = ShellM $ liftF $ PutCommand s unit
+putShell :: forall s o m . s -> ShellM s o m Unit
+putShell s = ShellM $ liftF $ PutShell s unit
 
-modifyCommand :: forall o m . (String -> String) -> ShellM o m Unit
-modifyCommand f = do
-  cmd <- getCommand
-  putCommand (f cmd)
+modifyShell :: forall s o m . (s -> s) -> ShellM s o m Unit
+modifyShell f = do
+  cmd <- getShell
+  putShell (f cmd)
 
-interpreter :: forall o m . (Terminal.Output -> ShellM o m Unit) -> ShellM o m Unit
+interpreter :: forall s o m . (Terminal.Output -> ShellM s o m Unit) -> ShellM s o m Unit
 interpreter i = ShellM $ liftF $ Interpreter i unit
 
-output :: forall o m . o -> ShellM o m Unit
+output :: forall s o m . o -> ShellM s o m Unit
 output o = ShellM $ liftF $ Output o unit
 

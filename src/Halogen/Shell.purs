@@ -20,15 +20,15 @@ type Slots = ( terminal :: H.Slot TerminalM Terminal.Output Unit )
 
 _terminal = Proxy :: Proxy "terminal"
 
-type Shell q r o m =
-  { init :: ShellM o m Unit
-  , query :: q -> ShellM o m r
+type Shell q r s o m =
+  { init :: ShellM s o m Unit
+  , query :: q -> ShellM s o m r
+  , shell :: s
   }
 
-type State q r o m =
-  { shell :: Shell q r o m
-  , interpreter :: Terminal.Output -> ShellM o m Unit
-  , command :: String
+type State q r s o m =
+  { shell :: Shell q r s o m
+  , interpreter :: Terminal.Output -> ShellM s o m Unit
   , terminal :: Maybe Terminal
   }
 
@@ -39,10 +39,10 @@ data Action =
 data Query q r a = Query q (r -> a)
 
 
-component :: forall q r o m. MonadAff m => H.Component (Query q r) (Shell q r o m) o m
+component :: forall q r s o m. MonadAff m => H.Component (Query q r) (Shell q r s o m) o m
 component = do
   H.mkComponent
-    { initialState: \shell -> { shell, interpreter: const (pure unit), command: "", terminal: Nothing }
+    { initialState: \shell -> { shell, interpreter: const (pure unit), terminal: Nothing }
     , render
     , eval: H.mkEval $ H.defaultEval { handleAction = handleAction
                                      , handleQuery = handleQuery
@@ -50,16 +50,16 @@ component = do
                                      }
     }
 
-render :: forall q r o m. MonadAff m => State q r o m -> H.ComponentHTML Action Slots m
+render :: forall q r s o m. MonadAff m => State q r s o m -> H.ComponentHTML Action Slots m
 render { terminal } =
   case terminal of
     Nothing -> HH.div_ []
     Just te -> HH.slot _terminal unit Terminal.component te TerminalOutput
 
-handleAction :: forall q r o m .
+handleAction :: forall q r s o m .
                 MonadAff m
              => Action
-             -> H.HalogenM (State q r o m) Action Slots o m Unit
+             -> H.HalogenM (State q r s o m) Action Slots o m Unit
 handleAction = case _ of
   Initialize -> do
     terminal <- H.liftEffect $ new (fontFamily := "\"Cascadia Code\", Menlo, monospace"
@@ -72,31 +72,31 @@ handleAction = case _ of
      { interpreter } <- H.get
      void $ runShellM $ interpreter output
 
-handleQuery :: forall q r o m a .
+handleQuery :: forall q r s o m a .
                 MonadAff m
              => Query q r a
-             -> H.HalogenM (State q r o m) Action Slots o m (Maybe a)
+             -> H.HalogenM (State q r s o m) Action Slots o m (Maybe a)
 handleQuery (Query q f) = do
   { shell } <- H.get
   r <- runShellM $ shell.query q
   pure $ f <$> r
 
 
-runShellM :: forall q r o m a .
+runShellM :: forall q r s o m a .
             MonadAff m
-         => ShellM o m a
-         -> H.HalogenM (State q r o m) Action Slots o m (Maybe a)
+         => ShellM s o m a
+         -> H.HalogenM (State q r s o m) Action Slots o m (Maybe a)
 runShellM (ShellM s) = runMaybeT $ runFreeM go s
   where
     go (Terminal f) = do
       r <- H.lift $ H.query _terminal unit f
       MaybeT $ pure r
     go (Lift m) = MaybeT $ Just <$> H.lift m
-    go (GetCommand a) = do
-      { command } <- H.lift H.get
-      pure $ a command
-    go (PutCommand c a) = do
-      H.modify_ (\st -> st { command = c })
+    go (GetShell a) = do
+      { shell } <- H.lift H.get
+      pure $ a shell.shell
+    go (PutShell sh a) = do
+      H.modify_ (\st -> st { shell = st.shell { shell = sh } })
       pure a
     go (Interpreter i a) = do
       H.modify_ (\st -> st { interpreter = i })

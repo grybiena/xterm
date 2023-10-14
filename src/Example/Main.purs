@@ -12,7 +12,7 @@ import Effect.Console (log)
 import Halogen.Aff as HA
 import Halogen.Buffer.Free (bufferLength, cursorX, getBufferLine, lineLength)
 import Halogen.Shell (component)
-import Halogen.Shell.Free (ShellM, getCommand, interpreter, modifyCommand, putCommand, terminal)
+import Halogen.Shell.Free (ShellM, getShell, interpreter, modifyShell, putShell, terminal)
 import Halogen.Terminal as Terminal
 import Halogen.Terminal.Free (TerminalM, loadAddon, webGLAddon, webLinksAddon, withActiveBuffer, write, writeLn)
 import Halogen.VDom.Driver (runUI)
@@ -31,6 +31,7 @@ main = do
                  write prompt
                interpreter (textInterpreter $ runRepl prompt (pure <<< toUpper))
            , query: const (pure unit)
+           , shell: ""
            }
      runUI component shell body
 
@@ -53,8 +54,8 @@ loadAddons verbose = do
 
 textInterpreter :: forall o m .
             MonadEffect m
-         => (String -> ShellM o m Unit)
-         -> Terminal.Output -> ShellM o m Unit 
+         => (String -> ShellM String o m Unit)
+         -> Terminal.Output -> ShellM String o m Unit 
 textInterpreter interpret =
   case _ of
     Terminal.Data d -> interpret d
@@ -64,20 +65,20 @@ textInterpreter interpret =
 
 runRepl :: forall o m .
             MonadEffect m
-         => String -> (String -> ShellM o m String)
-         -> String -> ShellM o m Unit 
+         => String -> (String -> ShellM String o m String)
+         -> String -> ShellM String o m Unit 
 runRepl prompt repl =
   case _ of
     -- Ctrl+C
     "\x0003" -> do
-       putCommand ""
+       putShell ""
        terminal do
          write "^C"
          write ("\r\n" <> prompt)
     -- Enter
     "\r" -> do
-       cmd <- getCommand
-       putCommand ""
+       cmd <- getShell
+       putShell ""
        res <- repl cmd
        terminal do
          when (not $ null $ trim cmd) $
@@ -85,7 +86,7 @@ runRepl prompt repl =
          write ("\r\n" <> prompt)
     -- BackSpace
     "\x007F" -> do
-       cmd <- getCommand
+       cmd <- getShell
        terminal do
          x <- withActiveBuffer cursorX
          if (x == 0)
@@ -106,10 +107,10 @@ runRepl prompt repl =
             else
               when (length cmd > 0) do
                 write "\x08 \x08"
-       modifyCommand (dropRight 1)
+       modifyShell (dropRight 1)
     -- Printable characters
     e | e >= "\x20" && e <= "\x7E" || e >= "\x00a0" -> do
-      modifyCommand (_ <> e)
+      modifyShell (_ <> e)
       terminal $ write e
     e -> do
       liftEffect $ log $ "non-printable: " <> e
