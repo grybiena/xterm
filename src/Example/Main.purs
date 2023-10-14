@@ -10,9 +10,10 @@ import Effect (Effect)
 import Effect.Class (class MonadEffect, liftEffect)
 import Effect.Console (log)
 import Halogen.Aff as HA
+import Halogen.Buffer.Free (bufferLength, cursorX, getBufferLine)
 import Halogen.Shell (component)
 import Halogen.Shell.Free (ShellM, getCommand, interpret, modifyCommand, putCommand, terminal)
-import Halogen.Terminal.Free (TerminalM, activeBuffer, bufferLength, bufferLineLength, cursorX, getBufferLine, loadAddon, webGLAddon, webLinksAddon, write, writeLn)
+import Halogen.Terminal.Free (TerminalM, bufferLineLength, loadAddon, webGLAddon, webLinksAddon, withActiveBuffer, write, writeLn)
 import Halogen.VDom.Driver (runUI)
 
 
@@ -74,13 +75,12 @@ runRepl prompt repl =
     "\x007F" -> do
        cmd <- getCommand
        terminal do
-         buf <- activeBuffer
-         x <- cursorX buf
+         x <- withActiveBuffer cursorX
          if (x == 0)
            then do
              write "\x1bM"
-             blen <- bufferLength buf
-             blin <- getBufferLine buf (blen-1) 
+             blen <- withActiveBuffer bufferLength
+             blin <- withActiveBuffer $ getBufferLine (blen-1) 
              ll <- traverse bufferLineLength blin
              write "\x9bK"
              flip traverse_ ll $ \l ->
