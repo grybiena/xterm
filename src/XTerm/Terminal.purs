@@ -22,8 +22,7 @@ import XTerm.Modes (Modes)
 import XTerm.Options (TerminalInitOnlyOptions, TerminalOptions)
 import XTerm.Parser (Parser)
 import XTerm.Utils (maybeUndefined)
-import Xterm.LocalizableStrings (LocalizableStrings)
-import Xterm.UnicodeHandling (UnicodeHandling)
+import XTerm.UnicodeHandling (UnicodeHandling)
 
 data Terminal
 
@@ -58,7 +57,6 @@ foreign import _setOptions :: Terminal -> Foreign -> Effect Unit
 setOptions :: Terminal -> Options TerminalOptions -> Effect Unit 
 setOptions t o = _setOptions t (options o)
 
-foreign import localizableStrings :: Terminal -> Effect LocalizableStrings
 foreign import onBell :: Terminal -> Effect Unit -> Effect Disposable
 newtype BinaryString = BinaryString String
 foreign import onBinary :: Terminal -> (BinaryString -> Effect Unit) -> Effect Disposable

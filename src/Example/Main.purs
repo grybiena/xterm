@@ -3,7 +3,7 @@ module Example.Main where
 import Prelude
 
 import Data.Maybe (Maybe(..))
-import Data.String (null, trim, length, toUpper)
+import Data.String (length, null, trim)
 import Data.String.CodeUnits (dropRight, takeRight)
 import Data.Traversable (traverse, traverse_)
 import Effect (Effect)
@@ -14,7 +14,7 @@ import Halogen.Buffer.Free (bufferLength, cursorX, getBufferLine, lineLength)
 import Halogen.Shell (component)
 import Halogen.Shell.Free (ShellM, getShell, interpreter, modifyShell, putShell, terminal)
 import Halogen.Terminal as Terminal
-import Halogen.Terminal.Free (TerminalM, loadAddon, webGLAddon, webLinksAddon, withActiveBuffer, write, writeLn)
+import Halogen.Terminal.Free (TerminalM, cols, loadAddon, rows, webGLAddon, webLinksAddon, withActiveBuffer, write, writeLn)
 import Halogen.VDom.Driver (runUI)
 
 
@@ -24,12 +24,16 @@ main = do
   HA.runHalogenAff do
      body <- HA.awaitBody
      let prompt = "$ "
+         repl s | trim s == "rows" = show <$> terminal rows 
+         repl s | trim s == "cols" = show <$> terminal cols
+
+         repl s = pure s
          shell =
            { init: do
                terminal do
                  loadAddons true
                  write prompt
-               interpreter (textInterpreter $ runRepl prompt (pure <<< toUpper))
+               interpreter (textInterpreter $ runRepl prompt repl)
            , query: const (pure unit)
            , shell: ""
            }
@@ -79,10 +83,7 @@ runRepl prompt repl =
     "\r" -> do
        cmd <- getShell
        putShell ""
-       interpreter (const (pure unit))
        res <- repl cmd
-       when (cmd /= "stop") do
-         interpreter (textInterpreter $ runRepl prompt (pure <<< toUpper))
        terminal do
          when (not $ null $ trim cmd) $
            write ("\r\n" <> res) 

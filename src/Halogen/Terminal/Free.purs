@@ -16,6 +16,7 @@ import Web.DOM (Element)
 import XTerm.Addons (class Addon, FitAddon, TerminalAddon, WebGLAddon, WebLinksAddon, addon)
 import XTerm.Addons as XA
 import XTerm.Buffer.Namespace as XB
+import XTerm.Marker (Marker)
 import XTerm.Terminal (Terminal)
 import XTerm.Terminal as XT
 
@@ -42,6 +43,15 @@ runTerminal = runFreeM go
     go (WithActiveBuffer f) = do
       terminal <- ask
       liftEffect $ runReaderT (runBuffer f) (XB.active $ XT.buffer terminal)
+    go (WithNormalBuffer f) = do
+      terminal <- ask
+      liftEffect $ runReaderT (runBuffer f) (XB.normal $ XT.buffer terminal)
+    go (WithAlternateBuffer f) = do
+      terminal <- ask
+      liftEffect $ runReaderT (runBuffer f) (XB.alternate $ XT.buffer terminal)
+    go (Markers f) = do
+      terminal <- ask
+      liftEffect $ f <$> XT.markers terminal
     go (Write s a) = do
       terminal <- ask
       sem <- liftAff $ AVar.empty
@@ -68,6 +78,9 @@ data TerminalF a =
   | Rows (Int -> a)
   | Cols (Int -> a)
   | WithActiveBuffer (BufferM a) 
+  | WithNormalBuffer (BufferM a)
+  | WithAlternateBuffer (BufferM a)
+  | Markers (Array Marker -> a)
   | Write String a
   | WriteLn String a
   | FitAddon (Maybe FitAddon -> a)
@@ -81,6 +94,9 @@ instance Functor TerminalF where
   map f (Rows e) = Rows (f <<< e)
   map f (Cols e) = Cols (f <<< e)
   map f (WithActiveBuffer b) = WithActiveBuffer (f <$> b)
+  map f (WithNormalBuffer b) = WithNormalBuffer (f <$> b)
+  map f (WithAlternateBuffer b) = WithAlternateBuffer (f <$> b)
+  map f (Markers m) = Markers (f <<< m)
   map f (Write s a) = Write s (f a)
   map f (WriteLn s a) = WriteLn s (f a)
   map f (FitAddon a) = FitAddon (f <<< a)
@@ -104,6 +120,15 @@ cols = liftF $ Cols identity
 
 withActiveBuffer :: forall a . BufferM a -> TerminalM a
 withActiveBuffer b = liftF $ WithActiveBuffer b
+
+withNormalBuffer :: forall a . BufferM a -> TerminalM a
+withNormalBuffer b = liftF $ WithNormalBuffer b
+
+withAlternateBuffer :: forall a . BufferM a -> TerminalM a
+withAlternateBuffer b = liftF $ WithAlternateBuffer b
+
+markers :: TerminalM (Array Marker)
+markers = liftF $ Markers identity
 
 write :: String -> TerminalM Unit
 write s = liftF $ Write s unit

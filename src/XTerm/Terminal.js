@@ -10,7 +10,6 @@ export const parser = term => () => term.parser;
 export const unicode = term => () => term.unicode;
 export const modes = term => () => term.modes;
 export const _setOptions = term => opts => () => terms.setOptions(opts);
-export const localizableStrings = term => () => term.strings;
 export const onBell = term => listener => () => term.onBell(listener);
 export const onBinary = term => listener => () => term.onBinary(s => listener(s)());
 export const onCursorMove = term => listener => () => term.onCursorMove(listener);

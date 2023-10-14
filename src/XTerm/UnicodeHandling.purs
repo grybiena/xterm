@@ -1,4 +1,4 @@
-module Xterm.UnicodeHandling where
+module XTerm.UnicodeHandling where
 
 import Data.Unit (Unit)
 import Effect (Effect)
