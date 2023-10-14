@@ -20,7 +20,7 @@ import Halogen.Terminal.Free (TerminalF(..))
 import XTerm.Addons (fitAddon, webGLAddon, webLinksAddon)
 import XTerm.Buffer.Namespace (active)
 import XTerm.Disposable (Disposable, dispose)
-import XTerm.Terminal (Terminal, buffer, cols, element, loadAddon, onData, openTerminal, rows, textarea, write, writeln)
+import XTerm.Terminal (BinaryString, Key, RowRange, Terminal, ViewportSize, ViewportYOffset, buffer, cols, element, loadAddon, onBell, onBinary, onData, onKey, onLineFeed, onRender, onResize, onScroll, onSelectionChange, onTitleChange, onWriteParsed, openTerminal, rows, textarea, write, writeln)
 
 type State =
   { terminal :: Terminal
@@ -33,7 +33,17 @@ data Action =
   | Raise Output
 
 data Output =
-  Data String
+    Data String
+  | Binary BinaryString
+  | Bell
+  | Key Key
+  | LineFeed
+  | Render RowRange
+  | WriteParsed
+  | Resize ViewportSize
+  | Scroll ViewportYOffset
+  | SelectionChange
+  | TitleChange String
 
 component :: forall m. MonadAff m => H.Component TerminalF Terminal Output m
 component = do
@@ -63,14 +73,78 @@ handleAction = case _ of
       Just el -> do
         { terminal } <- H.get
         H.liftEffect $ openTerminal terminal el
-        datas <- H.liftEffect HS.create
-        datad <- H.liftEffect $ onData terminal (HS.notify datas.listener <<< Raise <<< Data) 
-        _ <- H.subscribe datas.emitter 
-        H.modify_ (\st -> st { disposables = datad:st.disposables })
+        outputBell terminal
+        outputBinary terminal
+        outputKey terminal
+        outputLineFeed terminal
+        outputRender terminal
+        outputWriteParsed terminal
+        outputResize terminal
+        outputScroll terminal
+        outputSelectionChange terminal
+        outputTitleChange terminal
+        outputData terminal
   Finalize -> do
     { disposables } <- H.get
     H.liftEffect $ traverse_ dispose disposables
   Raise o -> H.raise o
+  where
+    outputBell terminal = do
+      { listener, emitter } <- H.liftEffect HS.create
+      disposable <- H.liftEffect $ onBell terminal (HS.notify listener $ Raise $ Bell) 
+      _ <- H.subscribe emitter 
+      H.modify_ (\st -> st { disposables = disposable:st.disposables })
+    outputBinary terminal = do
+      { listener, emitter } <- H.liftEffect HS.create
+      disposable <- H.liftEffect $ onBinary terminal (HS.notify listener <<< Raise <<< Binary) 
+      _ <- H.subscribe emitter 
+      H.modify_ (\st -> st { disposables = disposable:st.disposables })
+    outputKey terminal = do
+      { listener, emitter } <- H.liftEffect HS.create
+      disposable <- H.liftEffect $ onKey terminal (HS.notify listener <<< Raise <<< Key) 
+      _ <- H.subscribe emitter 
+      H.modify_ (\st -> st { disposables = disposable:st.disposables })
+    outputLineFeed terminal = do
+      { listener, emitter } <- H.liftEffect HS.create
+      disposable <- H.liftEffect $ onLineFeed terminal (HS.notify listener $ Raise $ LineFeed) 
+      _ <- H.subscribe emitter 
+      H.modify_ (\st -> st { disposables = disposable:st.disposables })
+    outputRender terminal = do
+      { listener, emitter } <- H.liftEffect HS.create
+      disposable <- H.liftEffect $ onRender terminal (HS.notify listener <<< Raise <<< Render) 
+      _ <- H.subscribe emitter 
+      H.modify_ (\st -> st { disposables = disposable:st.disposables })
+    outputWriteParsed terminal = do
+      { listener, emitter } <- H.liftEffect HS.create
+      disposable <- H.liftEffect $ onWriteParsed terminal (HS.notify listener $ Raise $ WriteParsed) 
+      _ <- H.subscribe emitter 
+      H.modify_ (\st -> st { disposables = disposable:st.disposables })
+    outputResize terminal = do
+      { listener, emitter } <- H.liftEffect HS.create
+      disposable <- H.liftEffect $ onResize terminal (HS.notify listener <<< Raise <<< Resize) 
+      _ <- H.subscribe emitter 
+      H.modify_ (\st -> st { disposables = disposable:st.disposables })
+    outputScroll terminal = do
+      { listener, emitter } <- H.liftEffect HS.create
+      disposable <- H.liftEffect $ onScroll terminal (HS.notify listener <<< Raise <<< Scroll) 
+      _ <- H.subscribe emitter 
+      H.modify_ (\st -> st { disposables = disposable:st.disposables })
+    outputSelectionChange terminal = do
+      { listener, emitter } <- H.liftEffect HS.create
+      disposable <- H.liftEffect $ onSelectionChange terminal (HS.notify listener $ Raise $ SelectionChange) 
+      _ <- H.subscribe emitter 
+      H.modify_ (\st -> st { disposables = disposable:st.disposables })
+    outputTitleChange terminal = do
+      { listener, emitter } <- H.liftEffect HS.create
+      disposable <- H.liftEffect $ onTitleChange terminal (HS.notify listener <<< Raise <<< TitleChange) 
+      _ <- H.subscribe emitter 
+      H.modify_ (\st -> st { disposables = disposable:st.disposables })
+    outputData terminal = do
+      { listener, emitter } <- H.liftEffect HS.create
+      disposable <- H.liftEffect $ onData terminal (HS.notify listener <<< Raise <<< Data) 
+      _ <- H.subscribe emitter 
+      H.modify_ (\st -> st { disposables = disposable:st.disposables })
+
 
 
 handleQuery :: forall m a .
@@ -122,5 +196,4 @@ handleQuery = case _ of
     { terminal } <- H.get
     f <- H.liftEffect $ try $ loadAddon terminal t
     pure (Just (a (isRight f)))
-
 

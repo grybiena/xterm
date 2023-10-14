@@ -65,11 +65,14 @@ foreign import onBinary :: Terminal -> (BinaryString -> Effect Unit) -> Effect D
 foreign import onCursorMove :: Terminal -> Effect Unit -> Effect Disposable
 foreign import onData :: Terminal -> (String -> Effect Unit) -> Effect Disposable
 newtype KeycodeString = KeycodeString String
-foreign import onKey :: Terminal -> ({ key :: KeycodeString, domEvent :: KeyboardEvent } -> Effect Unit) -> Effect Disposable
+type Key = { key :: KeycodeString, domEvent :: KeyboardEvent }
+foreign import onKey :: Terminal -> (Key -> Effect Unit) -> Effect Disposable
 foreign import onLineFeed :: Terminal -> Effect Unit -> Effect Disposable
-foreign import onRender :: Terminal -> ({start :: Int, end :: Int} -> Effect Unit) -> Effect Disposable
+type RowRange = {start :: Int, end :: Int}
+foreign import onRender :: Terminal -> (RowRange -> Effect Unit) -> Effect Disposable
 foreign import onWriteParsed :: Terminal -> Effect Unit -> Effect Disposable
-foreign import onResize :: Terminal -> ({ cols :: Int, rows :: Int} -> Effect Unit) -> Effect Disposable
+type ViewportSize = { cols :: Int, rows :: Int} 
+foreign import onResize :: Terminal -> (ViewportSize -> Effect Unit) -> Effect Disposable
 newtype ViewportYOffset = ViewportYOffset Int
 foreign import onScroll :: Terminal -> (ViewportYOffset -> Effect Unit) -> Effect Disposable
 foreign import onSelectionChange :: Terminal -> Effect Unit -> Effect Disposable

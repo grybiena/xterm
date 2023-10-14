@@ -35,7 +35,7 @@ type State q r o m =
 
 data Action =
     Initialize
-  | TerminalInput T.Output
+  | TerminalOutput T.Output
 
 data Query q r a = Query q (r -> a)
 
@@ -55,7 +55,7 @@ render :: forall q r o m. MonadAff m => State q r o m -> H.ComponentHTML Action 
 render { terminal } =
   case terminal of
     Nothing -> HH.div_ []
-    Just te -> HH.slot _terminal unit T.component te TerminalInput
+    Just te -> HH.slot _terminal unit T.component te TerminalOutput
 
 handleAction :: forall q r o m .
                 MonadAff m
@@ -69,9 +69,10 @@ handleAction = case _ of
     H.modify_ (\st -> st { terminal = Just terminal })
     { shell } <- H.get
     void $ runShellM $ shell.init
-  TerminalInput (Data d) -> do
+  TerminalOutput (Data d) -> do
      { interpret } <- H.get
      void $ runShellM $ interpret d
+  TerminalOutput _ -> pure unit
 
 handleQuery :: forall q r o m a .
                 MonadAff m
