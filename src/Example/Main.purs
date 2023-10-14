@@ -22,11 +22,14 @@ main = do
   HA.runHalogenAff do
      body <- HA.awaitBody
      let prompt = "$ "
-         shell = do
-            terminal do
-              loadAddons true
-              write prompt
-            interpret (runRepl prompt (pure <<< toUpper))
+         shell =
+           { init: do
+               terminal do
+                 loadAddons true
+                 write prompt
+               interpret (runRepl prompt (pure <<< toUpper))
+           , query: const (pure unit)
+           }
      runUI component shell body
 
 loadAddons :: Boolean -> TerminalM Unit

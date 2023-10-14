@@ -21,8 +21,13 @@ type Slots = ( terminal :: H.Slot TerminalF T.Output Unit )
 
 _terminal = Proxy :: Proxy "terminal"
 
-type State m =
+type Shell q r m =
   { init :: ShellM m Unit
+  , query :: q -> ShellM m r
+  }
+
+type State q r m =
+  { shell :: Shell q r m
   , interpret :: String -> ShellM m Unit
   , command :: String
   , terminal :: Maybe Terminal
@@ -32,43 +37,57 @@ data Action =
     Initialize
   | TerminalInput T.Output
 
+data Query q r a = Query q (r -> a)
 
-component :: forall q o m. MonadAff m => H.Component q (ShellM m Unit) o m
+
+component :: forall q r o m. MonadAff m => H.Component (Query q r) (Shell q r m) o m
 component = do
   H.mkComponent
-    { initialState: \init -> { init, interpret: const (pure unit), command: "", terminal: Nothing }
+    { initialState: \shell -> { shell, interpret: const (pure unit), command: "", terminal: Nothing }
     , render
     , eval: H.mkEval $ H.defaultEval { handleAction = handleAction
+                                     , handleQuery = handleQuery
                                      , initialize = Just Initialize
                                      }
     }
 
-render :: forall m. MonadAff m => State m -> H.ComponentHTML Action Slots m
+render :: forall q r m. MonadAff m => State q r m -> H.ComponentHTML Action Slots m
 render { terminal } =
   case terminal of
     Nothing -> HH.div_ []
     Just te -> HH.slot _terminal unit T.component te TerminalInput
 
-handleAction :: forall o m .
+handleAction :: forall q r o m .
                 MonadAff m
              => Action
-             -> H.HalogenM (State m) Action Slots o m Unit
+             -> H.HalogenM (State q r m) Action Slots o m Unit
 handleAction = case _ of
   Initialize -> do
     terminal <- H.liftEffect $ new (fontFamily := "\"Cascadia Code\", Menlo, monospace"
                                  <> cursorBlink := true
                                    ) mempty
     H.modify_ (\st -> st { terminal = Just terminal })
-    { init } <- H.get
-    void $ runShellM $ init
+    { shell } <- H.get
+    void $ runShellM $ shell.init
   TerminalInput (Data d) -> do
      { interpret } <- H.get
      void $ runShellM $ interpret d
 
-runShellM :: forall o m a .
+handleQuery :: forall q r o m a .
+                MonadAff m
+             => Query q r a
+             -> H.HalogenM (State q r m) Action Slots o m (Maybe a)
+handleQuery (Query q f) = do
+  { shell } <- H.get
+  r <- runShellM $ shell.query q
+  pure $ f <$> r
+
+
+
+runShellM :: forall q r o m a .
             MonadAff m
          => ShellM m a
-         -> H.HalogenM (State m) Action Slots o m (Maybe a)
+         -> H.HalogenM (State q r m) Action Slots o m (Maybe a)
 runShellM (ShellM s) = runMaybeT $ runFreeM go s
   where
     go (Terminal t) = MaybeT $ runTerminal t
@@ -84,10 +103,10 @@ runShellM (ShellM s) = runMaybeT $ runFreeM go s
       pure a
 
 
-runTerminal :: forall o m a .
+runTerminal :: forall q r o m a .
                MonadAff m
             => TerminalM a
-            -> H.HalogenM (State m) Action Slots o m (Maybe a)
+            -> H.HalogenM (State q r m) Action Slots o m (Maybe a)
 runTerminal = runMaybeT <<< runFreeM go
   where
     go (TerminalElement a) = do
