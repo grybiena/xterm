@@ -12,7 +12,8 @@ import Effect.Console (log)
 import Halogen.Aff as HA
 import Halogen.Buffer.Free (bufferLength, cursorX, getBufferLine, lineLength)
 import Halogen.Shell (component)
-import Halogen.Shell.Free (ShellM, getCommand, interpret, modifyCommand, putCommand, terminal)
+import Halogen.Shell.Free (ShellM, getCommand, interpreter, modifyCommand, putCommand, terminal)
+import Halogen.Terminal as Terminal
 import Halogen.Terminal.Free (TerminalM, loadAddon, webGLAddon, webLinksAddon, withActiveBuffer, write, writeLn)
 import Halogen.VDom.Driver (runUI)
 
@@ -28,7 +29,7 @@ main = do
                terminal do
                  loadAddons true
                  write prompt
-               interpret (runRepl prompt (pure <<< toUpper))
+               interpreter (textInterpreter $ runRepl prompt (pure <<< toUpper))
            , query: const (pure unit)
            }
      runUI component shell body
@@ -49,6 +50,17 @@ loadAddons verbose = do
       when verbose $ write "Loading WebLinks "
       ok <- loadAddon addon
       when verbose $ if ok then writeLn "OK" else writeLn "FAILED"
+
+textInterpreter :: forall o m .
+            MonadEffect m
+         => (String -> ShellM o m Unit)
+         -> Terminal.Output -> ShellM o m Unit 
+textInterpreter interpret =
+  case _ of
+    Terminal.Data d -> interpret d
+    Terminal.LineFeed -> liftEffect $ log "line feed"
+    _ -> pure unit
+
 
 runRepl :: forall o m .
             MonadEffect m

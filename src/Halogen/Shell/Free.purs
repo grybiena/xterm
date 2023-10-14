@@ -7,6 +7,7 @@ import Control.Monad.Free (Free, liftF)
 import Control.Monad.Rec.Class (class MonadRec)
 import Effect.Aff.Class (class MonadAff, liftAff)
 import Effect.Class (class MonadEffect, liftEffect)
+import Halogen.Terminal as Terminal
 import Halogen.Terminal.Free (TerminalM)
 
 data ShellF o m a =
@@ -14,7 +15,7 @@ data ShellF o m a =
   | Lift (m a)
   | GetCommand (String -> a)
   | PutCommand String a
-  | Interpret (String -> ShellM o m Unit) a
+  | Interpreter (Terminal.Output -> ShellM o m Unit) a
   | Output o a
 
 instance Functor m => Functor (ShellF o m) where
@@ -22,7 +23,7 @@ instance Functor m => Functor (ShellF o m) where
   map f (Lift q) = Lift (f <$> q)
   map f (GetCommand s) = GetCommand (f <<< s)
   map f (PutCommand s a) = PutCommand s (f a)
-  map f (Interpret s a) = Interpret s (f a)
+  map f (Interpreter s a) = Interpreter s (f a)
   map f (Output o a) = Output o (f a)
 
 type Shell o m = Free (ShellF o m)
@@ -59,8 +60,8 @@ modifyCommand f = do
   cmd <- getCommand
   putCommand (f cmd)
 
-interpret :: forall o m . (String -> ShellM o m Unit) -> ShellM o m Unit
-interpret i = ShellM $ liftF $ Interpret i unit
+interpreter :: forall o m . (Terminal.Output -> ShellM o m Unit) -> ShellM o m Unit
+interpreter i = ShellM $ liftF $ Interpreter i unit
 
 output :: forall o m . o -> ShellM o m Unit
 output o = ShellM $ liftF $ Output o unit

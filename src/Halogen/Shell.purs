@@ -10,14 +10,13 @@ import Effect.Aff.Class (class MonadAff)
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.Shell.Free (ShellF(..), ShellM(..))
-import Halogen.Terminal (Output(..))
-import Halogen.Terminal as T
+import Halogen.Terminal as Terminal
 import Halogen.Terminal.Free (TerminalM)
 import Type.Proxy (Proxy(..))
 import XTerm.Options (cursorBlink, fontFamily)
 import XTerm.Terminal (Terminal, new)
 
-type Slots = ( terminal :: H.Slot TerminalM T.Output Unit )
+type Slots = ( terminal :: H.Slot TerminalM Terminal.Output Unit )
 
 _terminal = Proxy :: Proxy "terminal"
 
@@ -28,14 +27,14 @@ type Shell q r o m =
 
 type State q r o m =
   { shell :: Shell q r o m
-  , interpret :: String -> ShellM o m Unit
+  , interpreter :: Terminal.Output -> ShellM o m Unit
   , command :: String
   , terminal :: Maybe Terminal
   }
 
 data Action =
     Initialize
-  | TerminalOutput T.Output
+  | TerminalOutput Terminal.Output
 
 data Query q r a = Query q (r -> a)
 
@@ -43,7 +42,7 @@ data Query q r a = Query q (r -> a)
 component :: forall q r o m. MonadAff m => H.Component (Query q r) (Shell q r o m) o m
 component = do
   H.mkComponent
-    { initialState: \shell -> { shell, interpret: const (pure unit), command: "", terminal: Nothing }
+    { initialState: \shell -> { shell, interpreter: const (pure unit), command: "", terminal: Nothing }
     , render
     , eval: H.mkEval $ H.defaultEval { handleAction = handleAction
                                      , handleQuery = handleQuery
@@ -55,7 +54,7 @@ render :: forall q r o m. MonadAff m => State q r o m -> H.ComponentHTML Action 
 render { terminal } =
   case terminal of
     Nothing -> HH.div_ []
-    Just te -> HH.slot _terminal unit T.component te TerminalOutput
+    Just te -> HH.slot _terminal unit Terminal.component te TerminalOutput
 
 handleAction :: forall q r o m .
                 MonadAff m
@@ -69,10 +68,9 @@ handleAction = case _ of
     H.modify_ (\st -> st { terminal = Just terminal })
     { shell } <- H.get
     void $ runShellM $ shell.init
-  TerminalOutput (Data d) -> do
-     { interpret } <- H.get
-     void $ runShellM $ interpret d
-  TerminalOutput _ -> pure unit
+  TerminalOutput output -> do
+     { interpreter } <- H.get
+     void $ runShellM $ interpreter output
 
 handleQuery :: forall q r o m a .
                 MonadAff m
@@ -100,8 +98,8 @@ runShellM (ShellM s) = runMaybeT $ runFreeM go s
     go (PutCommand c a) = do
       H.modify_ (\st -> st { command = c })
       pure a
-    go (Interpret i a) = do
-      H.modify_ (\st -> st { interpret = i })
+    go (Interpreter i a) = do
+      H.modify_ (\st -> st { interpreter = i })
       pure a
     go (Output o a) = do
       H.lift $ H.raise o
