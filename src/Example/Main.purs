@@ -15,7 +15,7 @@ import Halogen.Shell (component)
 import Halogen.Shell.Free (ShellM, getShell, interpreter, modifyShell, putShell, terminal)
 import Halogen.Terminal as Terminal
 import Halogen.Terminal.Free (TerminalM, cols, loadAddon, options, rows, webGLAddon, webLinksAddon, withActiveBuffer, write, writeLn)
-import Halogen.Terminal.Free.Options (getCursorBlink, setCursorBlink)
+import Halogen.Terminal.Free.Options (getCursorBlink, getFontFamily, setCursorBlink)
 import Halogen.VDom.Driver (runUI)
 
 
@@ -34,7 +34,7 @@ main = do
          repl s | trim s == "blinkoff" = do
             terminal $ options $ setCursorBlink false
             pure ""
-
+         repl s | trim s == "fontFamily" = terminal $ options getFontFamily
          repl s = pure s
          shell =
            { init: do

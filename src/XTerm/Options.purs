@@ -107,6 +107,9 @@ fontSize = opt "fontSize"
 fontFamily :: TerminalOption String
 fontFamily = opt "fontFamily"
 
+foreign import getFontFamily :: TerminalOptions -> Effect String
+foreign import setFontFamily :: TerminalOptions -> String -> Effect Unit
+
 fopt :: forall opt . String -> Op (Options opt) FontWeight
 fopt = Op <<< fontWeightOpt
   where
