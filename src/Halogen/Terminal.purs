@@ -2,6 +2,7 @@ module Halogen.Terminal where
 
 import Prelude
 
+import Control.Monad.Reader (runReaderT)
 import Data.Array ((:))
 import Data.Either (hush, isRight)
 import Data.Maybe (Maybe(..))
@@ -11,14 +12,15 @@ import Effect.Aff.AVar as AVar
 import Effect.Aff.Class (class MonadAff)
 import Effect.Console (log)
 import Halogen as H
+import Halogen.Buffer.Free (runBuffer)
 import Halogen.HTML as HH
 import Halogen.HTML.Properties as HP
 import Halogen.Subscription as HS
 import Halogen.Terminal.Free (TerminalF(..))
 import XTerm.Addons (fitAddon, webGLAddon, webLinksAddon)
 import XTerm.Buffer (cursorX, cursorY, getLine, length)
-import XTerm.Buffer.Namespace (active)
 import XTerm.Buffer.Line as BL
+import XTerm.Buffer.Namespace (active)
 import XTerm.Disposable (Disposable, dispose)
 import XTerm.Terminal (Terminal, buffer, cols, element, loadAddon, onData, openTerminal, rows, textarea, write, writeln)
 
@@ -112,6 +114,9 @@ handleQuery = case _ of
   BufferLineLength b a -> do
     x <- H.liftEffect $ BL.length b
     pure $ Just $ a x
+  WithActiveBuffer f -> do
+    { terminal } <- H.get
+    H.liftEffect $ Just <$> runReaderT (runBuffer f) (active $ buffer terminal)
   Write s a -> do
     { terminal } <- H.get
     sem <- H.liftAff $ AVar.empty

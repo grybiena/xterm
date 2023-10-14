@@ -142,6 +142,9 @@ runTerminal = runMaybeT <<< runFreeM go
     go (BufferLineLength b a) = do
       r <- H.lift $ H.query _terminal unit (BufferLineLength b a)
       MaybeT $ pure r
+    go (WithActiveBuffer f) = do
+      r <- H.lift $ H.query _terminal unit (WithActiveBuffer f)
+      MaybeT $ pure r
     go (Write s a) = do
       H.lift $ H.tell _terminal unit (Write s)
       pure a

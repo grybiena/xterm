@@ -1,11 +1,12 @@
 module Halogen.Terminal.Free where
 
-import Control.Alt (class Functor)
+import Control.Alt (class Functor, (<$>))
 import Control.Category (identity, (<<<))
 import Control.Monad.Free (Free, liftF)
 import Data.Function (($))
 import Data.Maybe (Maybe)
 import Data.Unit (Unit, unit)
+import Halogen.Buffer.Free (BufferM)
 import Web.DOM (Element)
 import XTerm.Addons (class Addon, FitAddon, TerminalAddon, WebGLAddon, WebLinksAddon, addon)
 import XTerm.Buffer (Buffer)
@@ -24,6 +25,7 @@ data TerminalF a =
   | BufferLength Buffer (Int -> a)
   | GetBufferLine Buffer Int (Maybe BufferLine -> a)
   | BufferLineLength BufferLine (Int -> a)
+  | WithActiveBuffer (BufferM a) 
   | Write String a
   | WriteLn String a
   | FitAddon (Maybe FitAddon -> a)
@@ -42,6 +44,7 @@ instance Functor TerminalF where
   map f (BufferLength b e) = BufferLength b (f <<< e)
   map f (GetBufferLine b l e) = GetBufferLine b l (f <<< e)
   map f (BufferLineLength b e) = BufferLineLength b (f <<< e)
+  map f (WithActiveBuffer b) = WithActiveBuffer (f <$> b)
   map f (Write s a) = Write s (f a)
   map f (WriteLn s a) = WriteLn s (f a)
   map f (FitAddon a) = FitAddon (f <<< a)
@@ -80,6 +83,9 @@ getBufferLine b l = liftF $ GetBufferLine b l identity
 
 bufferLineLength :: BufferLine -> TerminalM Int 
 bufferLineLength b = liftF $ BufferLineLength b identity
+
+withActiveBuffer :: forall a . BufferM a -> TerminalM a
+withActiveBuffer b = liftF $ WithActiveBuffer b
 
 write :: String -> TerminalM Unit
 write s = liftF $ Write s unit
