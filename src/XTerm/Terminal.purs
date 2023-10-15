@@ -116,7 +116,7 @@ foreign import clear :: Terminal -> Effect Unit
 foreign import write :: Terminal -> String -> Effect Unit -> Effect Unit
 foreign import writeln :: Terminal -> String -> Effect Unit -> Effect Unit
 foreign import paste :: Terminal -> String -> Effect Unit
-foreign import refresh :: Terminal -> { start :: Int, end :: Int } -> Effect Unit
+foreign import refresh :: Terminal -> RowRange -> Effect Unit
 foreign import clearTextureAtlas :: Terminal -> Effect Unit
 foreign import reset :: Terminal -> Effect Unit
 foreign import _loadAddon :: Terminal -> TerminalAddon -> Effect Unit
