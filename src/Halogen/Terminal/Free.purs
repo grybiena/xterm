@@ -6,7 +6,7 @@ import Control.Monad.Free (Free, liftF, runFreeM)
 import Control.Monad.Reader (ReaderT, ask, runReaderT)
 import Control.Monad.Rec.Class (class MonadRec)
 import Data.Either (hush, isRight)
-import Data.Maybe (Maybe)
+import Data.Maybe (Maybe(..))
 import Effect.Aff (launchAff_, try)
 import Effect.Aff.AVar as AVar
 import Effect.Aff.Class (class MonadAff, liftAff)
@@ -156,4 +156,23 @@ webGLAddon = liftF $ WebGLAddon identity
 
 loadAddon :: forall a . Addon a => a -> TerminalM Boolean
 loadAddon t = liftF $ LoadAddon (addon t) identity
+
+
+loadAddons :: Boolean -> TerminalM Unit
+loadAddons verbose = do
+  wgl <- webGLAddon
+  case wgl of
+    Nothing -> when verbose $ writeLn "WebGL Addon unavailable"
+    Just addon -> do
+      when verbose $ write "Loading WebGL "
+      ok <- loadAddon addon
+      when verbose $ if ok then writeLn "OK" else writeLn "FAILED"
+  wli <- webLinksAddon
+  case wli of
+    Nothing -> when verbose $ writeLn "WebLinks Addon unavailable"
+    Just addon -> do
+      when verbose $ write "Loading WebLinks "
+      ok <- loadAddon addon
+      when verbose $ if ok then writeLn "OK" else writeLn "FAILED"
+
 
