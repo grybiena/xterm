@@ -21,7 +21,7 @@ rec {
         package = import ./package.nix { inherit pkgs npmlock2nix; } purs-nix;
 
         ps =
-          purs-nix.purs { inherit (package) dependencies foreign test-dependencies;
+          purs-nix.purs { inherit (package) dependencies foreign;
                           dir = ./.;
                         };
 
