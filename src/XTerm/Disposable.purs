@@ -1,4 +1,10 @@
-module XTerm.Disposable where
+module XTerm.Disposable
+  ( Disposable
+  , class IsDisposable
+  , toDisposable
+  , class Dispose
+  , dispose
+  ) where
 
 import Control.Category (identity, (<<<))
 import Data.Unit (Unit)

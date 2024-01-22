@@ -1,4 +1,10 @@
-module XTerm.Decoration where
+module XTerm.Decoration
+  ( Decoration
+  , marker
+  , onRender
+  , getElement
+  , overviewRuler
+  ) where
 
 import Control.Alt (map)
 import Control.Category ((<<<))

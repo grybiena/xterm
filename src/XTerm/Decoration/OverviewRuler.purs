@@ -1,4 +1,8 @@
-module XTerm.Decoration.OverviewRuler where
+module XTerm.Decoration.OverviewRuler
+  ( OverviewRuler
+  , setColor
+  , setPosition
+  ) where
 
 import Color (Color, toHexString)
 import Data.Unit (Unit)

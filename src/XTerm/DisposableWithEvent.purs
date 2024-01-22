@@ -1,4 +1,11 @@
-module XTerm.DisposableWithEvent where
+module XTerm.DisposableWithEvent
+  ( DisposableWithEvent
+  , class IsDisposableWithEvent
+  , toDisposableWithEvent
+  , class DisposeWithEvent
+  , onDispose
+  , isDisposed
+  ) where
 
 import Control.Category ((<<<))
 import Data.Unit (Unit)

@@ -1,7 +1,6 @@
 output
-node_modules/*
-!node_modules/xterm
-node_modules/xterm/*
+node_modules
+generated-docs
 result
 .psc-ide-port
 .direnv
