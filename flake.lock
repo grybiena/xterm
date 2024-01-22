@@ -51,16 +51,15 @@
         "purs-nix": "purs-nix"
       },
       "locked": {
-        "lastModified": 1686494242,
-        "narHash": "sha256-HJjQvhMMn/sClBO4E3xvFpE7JPI5u5SOGlfkdF9lphY=",
-        "ref": "grybiena",
-        "rev": "2e357bfdf92068d026a2d1580b6cef8913114822",
-        "revCount": 4,
+        "lastModified": 1705403527,
+        "narHash": "sha256-j/STqrb3iKwCrwoEU33ixaR00osuX0Kc38Nl6nbQ9Q8=",
+        "ref": "refs/heads/main",
+        "rev": "0b70f17e435a86a06fcb0ff346bbd8fd5bdef9ae",
+        "revCount": 5,
         "type": "git",
         "url": "ssh://git@github.com/grybiena/purescript-environment"
       },
       "original": {
-        "ref": "grybiena",
         "type": "git",
         "url": "ssh://git@github.com/grybiena/purescript-environment"
       }

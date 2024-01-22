@@ -1,7 +1,7 @@
 rec {
   description = "xterm";
   inputs = {
-    env.url = "git+ssh://git@github.com/grybiena/purescript-environment?ref=grybiena";  
+    env.url = "git+ssh://git@github.com/grybiena/purescript-environment";  
   };
   outputs = inputs@{ env, ... }:
     env.flake-utils.lib.eachDefaultSystem (system:
@@ -18,7 +18,7 @@ rec {
         };
 
         npmlock2nix = import env.npmlock2nix { inherit pkgs; };
-        package = import ./package.nix { inherit pkgs npmlock2nix; } purs-nix;
+        package = import ./package.nix { inherit pkgs npmlock2nix; name = description; } purs-nix;
 
         ps =
           purs-nix.purs { inherit (package) dependencies foreign;
@@ -39,6 +39,7 @@ rec {
                { packages = with pkgs; [
                    nodejs
                    (ps.command {
+                     inherit package;
                      bundle = {
                        esbuild = {
                          outfile = "test/main.js";

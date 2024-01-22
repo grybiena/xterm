@@ -1,0 +1,22 @@
+{
+  "dependencies": {
+    "purescript-aff-promise": "^v4.0.0",
+    "purescript-css": "^v6.0.0",
+    "purescript-options": "^v7.0.0",
+    "purescript-web-uievents": "^v4.0.0"
+  },
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "output"
+  ],
+  "license": [
+    "MIT"
+  ],
+  "name": "purescript-xterm",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/grybiena/xterm.git"
+  }
+}
