@@ -5,3 +5,5 @@ result
 .psc-ide-port
 .direnv
 test/main.js
+/.spago/
+/spago.lock
